@@ -62,7 +62,7 @@ public class User {
     @Min(value = 0, message = "{min.age}")
     @Max(value = 120, message = "{max.age}")
     @Setter
-    private int age;
+    private Integer age;
 
     /**
      * Дата и время создания записи о пользователе.
