@@ -7,6 +7,7 @@ import ru.astondevs.dto.UserCreateDto;
 import ru.astondevs.dto.UserResponseDto;
 import ru.astondevs.entity.User;
 import ru.astondevs.exception.DuplicateEmailException;
+import ru.astondevs.exception.ResourceNotFoundException;
 import ru.astondevs.repository.UserRepository;
 
 @Service
@@ -27,6 +28,14 @@ public class UserService {
                 .build();
         User savedUser = userRepository.save(user);
         return convertToResponseDto(savedUser);
+    }
+
+    @Transactional(readOnly = true)
+    public UserResponseDto getUserById(Long id) {
+        return userRepository.findById(id)
+                .map(this::convertToResponseDto)
+                .orElseThrow(() -> new ResourceNotFoundException("Пользователя с id: "
+                        + id + " не существует"));
     }
 
     private UserResponseDto convertToResponseDto(User user) {
