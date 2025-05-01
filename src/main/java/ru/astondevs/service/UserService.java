@@ -1,7 +1,7 @@
 package ru.astondevs.service;
 
-import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.astondevs.dto.UserCreateDto;
@@ -12,6 +12,9 @@ import ru.astondevs.exception.DuplicateEmailException;
 import ru.astondevs.exception.ResourceNotFoundException;
 import ru.astondevs.repository.UserRepository;
 
+import java.util.List;
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -19,9 +22,7 @@ public class UserService {
 
     @Transactional
     public UserResponseDto createUser(UserCreateDto dto) {
-        if (userRepository.existsByEmail(dto.email())) {
-            throw new DuplicateEmailException("Email " + dto.email() + " уже существует");
-        }
+        validateEmail(dto.email());
 
         User user = User.builder()
                 .name(dto.name())
@@ -34,10 +35,7 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public UserResponseDto getUserById(Long id) {
-        return userRepository.findById(id)
-                .map(this::convertToResponseDto)
-                .orElseThrow(() -> new ResourceNotFoundException("Пользователя с id: "
-                        + id + " не существует"));
+        return convertToResponseDto(getUserEntity(id));
     }
 
     @Transactional(readOnly = true)
@@ -49,36 +47,40 @@ public class UserService {
 
     @Transactional
     public UserResponseDto updateUser(Long id, UserUpdateDto dto) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Пользователя с id: "
-                        + id + " не существует"));
+        User user = getUserEntity(id);
+
+        Optional.ofNullable(dto.name()).ifPresent(user::setName);
 
         if (dto.email() != null && !dto.email().equals(user.getEmail())) {
-            if (userRepository.existsByEmail(dto.email())) {
-                throw new DuplicateEmailException("Email " + dto.email() + " уже существует");
-            }
+            validateEmail(dto.email());
             user.setEmail(dto.email());
         }
 
-        if (dto.name() != null) {
-            user.setName(dto.name());
-        }
-        if (dto.age() != null) {
-            user.setAge(dto.age());
-        }
+        Optional.ofNullable(dto.age()).ifPresent(user::setAge);
 
-        User updateUser = userRepository.save(user);
-        return convertToResponseDto(updateUser);
+        return convertToResponseDto(userRepository.save(user));
     }
 
     @Transactional
     public void deleteById(Long id) {
-        if (!userRepository.existsById(id)) {
+        try {
+            userRepository.deleteById(id);
+        } catch (EmptyResultDataAccessException ex) {
             throw new ResourceNotFoundException("Пользователя с id: "
                     + id + " не существует");
         }
+    }
 
-        userRepository.deleteById(id);
+    private void validateEmail(String email) {
+        if (userRepository.existsByEmail(email)) {
+            throw new DuplicateEmailException("Email " + email + " уже существует");
+        }
+    }
+
+    private User getUserEntity(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Пользователя с id: "
+                + id + " не существует"));
     }
 
     private UserResponseDto convertToResponseDto(User user) {
