@@ -39,8 +39,8 @@ public class User {
      * Имя пользователя.
      * Должно содержать 2-50 символов и не быть пустым.
      */
-    @NotBlank(message = "Имя не может быть пустым")
-    @Size(min = 2, max = 50, message = "Имя должно быть от 2 до 50 символов")
+    @NotBlank(message = "{name.not.found}")
+    @Size(min = 2, max = 50, message = "{name.incorrect}")
     @Column(nullable = false)
     @Setter
     private String name;
@@ -49,8 +49,8 @@ public class User {
      * Электронная почта пользователя.
      * Должна быть уникальной, соответствовать формату email и не может быть пустой.
      */
-    @Email(message = "Некорректный формат Email")
-    @NotBlank(message = "Email не может быть пустым")
+    @Email(message = "{email.incorrect}")
+    @NotBlank(message = "{email.not.found}")
     @Column(nullable = false)
     @Setter
     private String email;
@@ -59,8 +59,8 @@ public class User {
      * Возраст пользователя.
      * Должен быть в диапазоне от 0 до 120 лет.
      */
-    @Min(value = 0, message = "Возраст не может быть отрицательным")
-    @Max(value = 120, message = "Возраст не может превышать 120 лет")
+    @Min(value = 0, message = "{min.age}")
+    @Max(value = 120, message = "{max.age}")
     @Setter
     private int age;
 
