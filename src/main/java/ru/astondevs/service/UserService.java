@@ -1,5 +1,6 @@
 package ru.astondevs.service;
 
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -10,8 +11,6 @@ import ru.astondevs.entity.User;
 import ru.astondevs.exception.DuplicateEmailException;
 import ru.astondevs.exception.ResourceNotFoundException;
 import ru.astondevs.repository.UserRepository;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -70,6 +69,16 @@ public class UserService {
 
         User updateUser = userRepository.save(user);
         return convertToResponseDto(updateUser);
+    }
+
+    @Transactional
+    public void deleteById(Long id) {
+        if (!userRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Пользователя с id: "
+                    + id + " не существует");
+        }
+
+        userRepository.deleteById(id);
     }
 
     private UserResponseDto convertToResponseDto(User user) {
