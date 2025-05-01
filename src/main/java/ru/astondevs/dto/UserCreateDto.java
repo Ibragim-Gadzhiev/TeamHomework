@@ -17,16 +17,15 @@ import jakarta.validation.constraints.Size;
  * </ul>
  */
 public class UserCreateDto {
-    @NotBlank(message = "Имя не может быть пустым")
-    @Size(min = 2, max = 50, message = "Имя должно содержать 2-50 символов")
+    @NotBlank(message = "{name.not.found}")
+    @Size(min = 2, max = 50, message = "{name.incorrect}")
     private String name;
 
-    @NotBlank(message = "Email не может быть пустым")
-    @Email(message = "Некорректный формат email")
+    @NotBlank(message = "{email.not.found}")
+    @Email(message = "{email.incorrect}")
     private String email;
 
-    @Min(value = 0, message = "Возраст не может быть отрицательным")
-    @Max(value = 120, message = "Возраст не может быть больше 120 лет")
+    @Min(value = 0, message = "{min.age}") @Max(value = 120, message = "{max.age}")
     private int age;
 
     /**
