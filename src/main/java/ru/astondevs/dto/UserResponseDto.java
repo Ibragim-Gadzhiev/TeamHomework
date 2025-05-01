@@ -1,6 +1,8 @@
 package ru.astondevs.dto;
 
 import java.time.LocalDateTime;
+import lombok.Builder;
+
 
 /**
  * DTO для представления пользовательских данных в ответе.
@@ -17,80 +19,32 @@ import java.time.LocalDateTime;
  *     <li>{@code createdAt} - дата и время создания пользователя</li>
  * </ul>
  */
-public class UserResponseDto {
-    private Long id;
-    private String name;
-    private String email;
-    private int age;
-    private LocalDateTime createdAt;
+@Builder
+public record UserResponseDto(
+        /**
+         * Уникальный идентификатор пользователя.
+         */
+        Long id,
 
-    /**
-     * Возвращает идентификатор пользователя.
-     */
-    public Long getId() {
-        return id;
-    }
+        /**
+         * Имя пользователя.
+         */
+        String name,
 
-    /**
-     * Возвращает имя пользователя.
-     */
-    public String getName() {
-        return name;
-    }
+        /**
+         * Адрес электронной почты.
+         */
+        String email,
 
-    /**
-     * Возвращает адрес электронной почты пользователя.
-     */
-    public String getEmail() {
-        return email;
-    }
+        /**
+         * Возраст пользователя.
+         */
+        int age,
 
-    /**
-     * Возвращает возраст пользователя.
-     */
-    public int getAge() {
-        return age;
-    }
+        /**
+         * Дата и время создания записи.
+         */
+        LocalDateTime createdAt
 
-    /**
-     * Возвращает время и дату создания пользователя.
-     */
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    /**
-     * Устанавливает идентификатор пользователя.
-     */
-    void setId(Long id) {
-        this.id = id;
-    }
-
-    /**
-     * Устанавливает имя пользователя.
-     */
-    void setName(String name) {
-        this.name = name;
-    }
-
-    /**
-     * Устанавливает адрес электронной почты пользователя.
-     */
-    void setEmail(String email) {
-        this.email = email;
-    }
-
-    /**
-     * Устанавливает возраст пользователя.
-     */
-    void setAge(int age) {
-        this.age = age;
-    }
-
-    /**
-     * Устанавливает время и дату создания пользователя.
-     */
-    void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
+) {
 }
