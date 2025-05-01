@@ -12,6 +12,11 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
 /**
@@ -20,6 +25,10 @@ import org.hibernate.annotations.CreationTimestamp;
  */
 @Entity
 @Table(name = "users")
+@Builder
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
 public class User {
 
     @Id
@@ -33,6 +42,7 @@ public class User {
     @NotBlank(message = "Имя не может быть пустым")
     @Size(min = 2, max = 50, message = "Имя должно быть от 2 до 50 символов")
     @Column(nullable = false)
+    @Setter
     private String name;
 
     /**
@@ -42,6 +52,7 @@ public class User {
     @Email(message = "Некорректный формат Email")
     @NotBlank(message = "Email не может быть пустым")
     @Column(nullable = false)
+    @Setter
     private String email;
 
     /**
@@ -50,6 +61,7 @@ public class User {
      */
     @Min(value = 0, message = "Возраст не может быть отрицательным")
     @Max(value = 120, message = "Возраст не может превышать 120 лет")
+    @Setter
     private int age;
 
     /**
@@ -59,83 +71,4 @@ public class User {
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
-
-    /**
-     * Конструктор по умолчанию, необходимый для JPA.
-     */
-    public User() {
-    }
-
-    /**
-     * Возвращает уникальный идентификатор пользователя.
-     *
-     * @return идентификатор пользователя
-     */
-    public Long getId() {
-        return id;
-    }
-
-    /**
-     * Возвращает имя пользователя.
-     *
-     * @return имя пользователя
-     */
-    public String getName() {
-        return name;
-    }
-
-    /**
-     * Устанавливает имя пользователя.
-     *
-     * @param name имя пользователя (2-50 символов)
-     */
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    /**
-     * Возвращает электронную почту пользователя.
-     *
-     * @return email пользователя
-     */
-    public String getEmail() {
-        return email;
-    }
-
-    /**
-     * Устанавливает электронную почту пользователя.
-     *
-     * @param email корректный email адрес
-     */
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    /**
-     * Возвращает возраст пользователя.
-     *
-     * @return возраст (0-150 лет)
-     */
-    public int getAge() {
-        return age;
-    }
-
-    /**
-     * Устанавливает возраст пользователя.
-     *
-     * @param age возраст (должен быть в диапазоне 0-120)
-     */
-    public void setAge(int age) {
-        this.age = age;
-    }
-
-    /**
-     * Возвращает дату и время создания записи.
-     * Значение устанавливается автоматически при создании сущности.
-     *
-     * @return дата создания
-     */
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
 }
