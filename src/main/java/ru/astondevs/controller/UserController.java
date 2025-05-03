@@ -1,20 +1,34 @@
 package ru.astondevs.controller;
 
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 import ru.astondevs.dto.UserCreateDto;
 import ru.astondevs.dto.UserResponseDto;
 import ru.astondevs.dto.UserUpdateDto;
-import ru.astondevs.exception.DuplicateEmailException;
-import ru.astondevs.exception.ResourceNotFoundException;
 import ru.astondevs.service.UserService;
 
-import java.util.List;
-
-
+/**
+ * REST-контроллер для управления пользователями.
+ *
+ * <p>Предоставляет CRUD-операции через REST API:
+ * <ul>
+ *     <li>Создание пользователя</li>
+ *     <li>Получение пользователя/списка пользователей</li>
+ *     <li>Частичное обновление данных пользователя</li>
+ *     <li>Удаление пользователя</li>
+ * </ul>
+ */
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
@@ -22,77 +36,65 @@ public class UserController {
     private final UserService userService;
 
     /**
-     * Создание нового пользователя
+     * Создание нового пользователя.
+     *
      * @param dto DTO с данными нового пользователя
-     * @return ResponseEntity с созданным пользователем и статусом 201 (Created)
+     * @return DTO с созданным пользователем и статусом 201 (Created)
      */
     @PostMapping
-    public ResponseEntity<UserResponseDto> createUser(@Valid @RequestBody UserCreateDto dto) {
-        try {
-            UserResponseDto createdUser = userService.createUser(dto);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
-        } catch (DuplicateEmailException ex) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
-        }
+    @ResponseStatus(HttpStatus.CREATED)
+    public UserResponseDto createUser(@Valid @RequestBody UserCreateDto dto) {
+        return userService.createUser(dto);
     }
 
     /**
-     * Получение пользователя по ID
+     * Получение пользователя по ID.
+     *
      * @param id идентификатор пользователя
-     * @return ResponseEntity с данными пользователя и статусом 200 (OK)
+     * @return DTO с данными пользователя и статусом 200 (OK)
+     * @throws ru.astondevs.exception.ResourceNotFoundException если пользователь не найден
      */
     @GetMapping("/{id}")
-    public ResponseEntity<UserResponseDto> getUserById(@PathVariable Long id) {
-        try {
-            UserResponseDto user = userService.getUserById(id);
-            return ResponseEntity.ok(user);
-        } catch (ResourceNotFoundException ex) {
-            return ResponseEntity.notFound().build();
-        }
+    public UserResponseDto getUserById(@PathVariable Long id) {
+        return userService.getUserById(id);
     }
 
     /**
-     * Получение списка всех пользователей
-     * @return ResponseEntity со списком пользователей и статусом 200 (OK)
+     * Получение списка всех пользователей.
+     *
+     * @return список DTO пользователей и статусом 200 (OK)
      */
     @GetMapping
-    public ResponseEntity<List<UserResponseDto>> getAllUsers() {
-        List<UserResponseDto> users = userService.getAllUsers();
-        return ResponseEntity.ok(users);
+    public List<UserResponseDto> getAllUsers() {
+        return userService.getAllUsers();
     }
 
     /**
-     * Обновление данных пользователя
+     * Обновление данных пользователя.
+     *
      * @param id идентификатор пользователя
      * @param dto DTO с обновлёнными данными
-     * @return ResponseEntity с обновлёнными данными пользователя и статусом 200 (OK)
+     * @return DTO с обновлёнными данными пользователя и статусом 200 (OK)
+     * @throws ru.astondevs.exception.ResourceNotFoundException если пользователь не найден
+     * @throws ru.astondevs.exception.DuplicateEmailException если новый email уже существует
      */
-    @PutMapping("/{id}")
-    public ResponseEntity<UserResponseDto> updateUser(
+    @PatchMapping("/{id}")
+    public UserResponseDto updateUser(
             @PathVariable Long id,
             @Valid @RequestBody UserUpdateDto dto) {
-        try {
-            UserResponseDto updatedUser = userService.updateUser(id, dto);
-            return ResponseEntity.ok(updatedUser);
-        } catch (ResourceNotFoundException ex) {
-            return ResponseEntity.notFound().build();
-        } catch (DuplicateEmailException ex) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
-        }
+        return userService.updateUser(id, dto);
     }
 
     /**
-     * Удаление пользователя
+     * Удаление пользователя по ID.
+     *
      * @param id идентификатор пользователя
-     * @return ResponseEntity со статусом 204 (No Content)
+     * @return статус 204 (No Content)
+     * @throws ru.astondevs.exception.ResourceNotFoundException если пользователь не найден
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        try {
-            userService.deleteById(id);
-            return ResponseEntity.noContent().build();
-        } catch (ResourceNotFoundException ex) {
-            return ResponseEntity.notFound().build();
-        }
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteUser(@PathVariable Long id) {
+        userService.deleteById(id);
     }
 }
