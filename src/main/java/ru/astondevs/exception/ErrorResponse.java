@@ -1,4 +1,6 @@
 package ru.astondevs.exception;
 
-public class ErrorResponse {
+import org.springframework.http.HttpStatus;
+
+public record ErrorResponse(String message, HttpStatus httpStatus) {
 }
