@@ -3,6 +3,7 @@ package ru.astondevs.controller;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,6 +30,7 @@ import ru.astondevs.service.UserService;
  *     <li>Удаление пользователя</li>
  * </ul>
  */
+@Slf4j
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
@@ -44,7 +46,10 @@ public class UserController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public UserResponseDto createUser(@Valid @RequestBody UserCreateDto dto) {
-        return userService.createUser(dto);
+        log.info("POST /api/users: Creating user with email '{}'", dto.email());
+        UserResponseDto createdUser = userService.createUser(dto);
+        log.debug("Created user with ID: {}", createdUser.id());
+        return createdUser;
     }
 
     /**
@@ -56,7 +61,10 @@ public class UserController {
      */
     @GetMapping("/{id}")
     public UserResponseDto getUserById(@PathVariable Long id) {
-        return userService.getUserById(id);
+        log.info("GET /api/users/{}: Fetching user", id);
+        UserResponseDto user = userService.getUserById(id);
+        log.debug("Found user: {}", user);
+        return user;
     }
 
     /**
@@ -66,7 +74,10 @@ public class UserController {
      */
     @GetMapping
     public List<UserResponseDto> getAllUsers() {
-        return userService.getAllUsers();
+        log.info("GET /api/users: Fetching all users");
+        List<UserResponseDto> users = userService.getAllUsers();
+        log.debug("Found {} users", users.size());
+        return users;
     }
 
     /**
@@ -82,7 +93,10 @@ public class UserController {
     public UserResponseDto updateUser(
             @PathVariable Long id,
             @Valid @RequestBody UserUpdateDto dto) {
-        return userService.updateUser(id, dto);
+        log.info("PATCH /api/users/{}: Updating user with data: {}", id, dto);
+        UserResponseDto updatedUser = userService.updateUser(id, dto);
+        log.debug("Updated user {}: {}", id, updatedUser);
+        return updatedUser;
     }
 
     /**
@@ -95,6 +109,8 @@ public class UserController {
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteUser(@PathVariable Long id) {
+        log.info("DELETE /api/users/{}: Deleting user", id);
         userService.deleteById(id);
+        log.debug("User {} successfully deleted", id);
     }
 }
