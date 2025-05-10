@@ -36,6 +36,7 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public UserResponseDto createUser(UserCreateDto dto) {
+        log.info("Creating user with email: {}", dto.email());
         userValidator.validateCreateDto(dto);
         User user = userConverter.toEntity(dto);
         User savedUser = userRepository.save(user);
@@ -84,6 +85,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserResponseDto updateUser(Long id, UserUpdateDto dto) {
+        log.info("Updating user ID: {}", id);
         userValidator.validateUpdateDto(dto);
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Пользователя с id: "
@@ -104,11 +106,11 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void deleteById(Long id) {
+        log.info("Deleting user ID: {}", id);
         if (!userRepository.existsById(id)) {
             throw new ResourceNotFoundException("Пользователя с id: "
                     + id + " не существует");
         }
-
         userRepository.deleteById(id);
         log.info("Deleted user id: {}", id);
     }
