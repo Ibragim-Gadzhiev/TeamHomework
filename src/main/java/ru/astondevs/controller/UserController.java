@@ -19,17 +19,6 @@ import ru.astondevs.dto.UserResponseDto;
 import ru.astondevs.dto.UserUpdateDto;
 import ru.astondevs.service.UserService;
 
-/**
- * REST-контроллер для управления пользователями.
- *
- * <p>Предоставляет CRUD-операции через REST API:
- * <ul>
- *     <li>Создание пользователя</li>
- *     <li>Получение пользователя/списка пользователей</li>
- *     <li>Частичное обновление данных пользователя</li>
- *     <li>Удаление пользователя</li>
- * </ul>
- */
 @Slf4j
 @RestController
 @RequestMapping("/api/users")
@@ -37,12 +26,6 @@ import ru.astondevs.service.UserService;
 public class UserController {
     private final UserService userService;
 
-    /**
-     * Создание нового пользователя.
-     *
-     * @param dto DTO с данными нового пользователя
-     * @return DTO с созданным пользователем и статусом 201 (Created)
-     */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public UserResponseDto createUser(@Valid @RequestBody UserCreateDto dto) {
@@ -52,13 +35,6 @@ public class UserController {
         return createdUser;
     }
 
-    /**
-     * Получение пользователя по ID.
-     *
-     * @param id идентификатор пользователя
-     * @return DTO с данными пользователя и статусом 200 (OK)
-     * @throws ru.astondevs.exception.ResourceNotFoundException если пользователь не найден
-     */
     @GetMapping("/{id}")
     public UserResponseDto getUserById(@PathVariable Long id) {
         log.info("GET /api/users/{}: Fetching user", id);
@@ -67,11 +43,6 @@ public class UserController {
         return user;
     }
 
-    /**
-     * Получение списка всех пользователей.
-     *
-     * @return список DTO пользователей и статусом 200 (OK)
-     */
     @GetMapping
     public List<UserResponseDto> getAllUsers() {
         log.info("GET /api/users: Fetching all users");
@@ -80,15 +51,6 @@ public class UserController {
         return users;
     }
 
-    /**
-     * Обновление данных пользователя.
-     *
-     * @param id идентификатор пользователя
-     * @param dto DTO с обновлёнными данными
-     * @return DTO с обновлёнными данными пользователя и статусом 200 (OK)
-     * @throws ru.astondevs.exception.ResourceNotFoundException если пользователь не найден
-     * @throws ru.astondevs.exception.DuplicateEmailException если новый email уже существует
-     */
     @PatchMapping("/{id}")
     public UserResponseDto updateUser(
             @PathVariable Long id,
@@ -99,13 +61,6 @@ public class UserController {
         return updatedUser;
     }
 
-    /**
-     * Удаление пользователя по ID.
-     *
-     * @param id идентификатор пользователя
-     * @return статус 204 (No Content)
-     * @throws ru.astondevs.exception.ResourceNotFoundException если пользователь не найден
-     */
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteUser(@PathVariable Long id) {
