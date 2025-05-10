@@ -13,12 +13,15 @@ public class UserValidator {
     private final UserRepository userRepository;
 
     public void validateCreateDto(UserCreateDto dto) {
-        if (dto.name() == null && dto.email() == null && dto.age() == null) {
-            throw new IllegalArgumentException("Нужно заполнить хотя бы одно поле");
+        if (userRepository.existsByEmail(dto.email())) {
+            throw new DuplicateEmailException("Email уже существует");
         }
     }
 
     public void validateUpdateDto(UserUpdateDto dto) {
+        if (dto.name() == null && dto.email() == null && dto.age() == null) {
+            throw new IllegalArgumentException("Нужно заполнить хотя бы одно поле");
+        }
         if (dto.email() != null && userRepository.existsByEmail(dto.email())) {
             throw new DuplicateEmailException("Email уже существует");
         }
