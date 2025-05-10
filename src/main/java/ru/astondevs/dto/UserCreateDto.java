@@ -18,6 +18,6 @@ public record UserCreateDto(
         String email,
 
         @Min(value = 0, message = "{min.age}") @Max(value = 120, message = "{max.age}")
-        int age
+        Integer age
 ) {
 }
