@@ -21,9 +21,4 @@ public record UserUpdateDto(
         @Min(value = 0, message = "{min.age}") @Max(value = 120, message = "{max.age}")
         Integer age
 ) {
-    public UserUpdateDto {
-        if (name == null && email == null && age == null) {
-            throw new IllegalArgumentException("Нужно заполнить хотя бы одно поле");
-        }
-    }
 }
