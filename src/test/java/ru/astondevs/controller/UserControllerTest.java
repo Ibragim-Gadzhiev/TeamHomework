@@ -29,6 +29,7 @@ import java.util.stream.Stream;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -113,7 +114,30 @@ public class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$." + errorField).exists());
+                .andExpect(jsonPath("$.errors[?(@.field == '" + errorField + "')]").exists());
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {-1, 121})
+    void createUser_InvalidAge_Returns400(int age) throws Exception {
+        UserCreateDto dto = new UserCreateDto("Test", "test@mail.com", age);
+
+        mockMvc.perform(post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[?(@.field == 'age')]").exists());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"A", "NameWithMoreThan50Characters_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"})
+    void createUser_InvalidName_Returns400(String name) throws Exception {
+        UserCreateDto dto = new UserCreateDto(name, "test@mail.com", 30);
+        mockMvc.perform(post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[?(@.field == 'name')]").exists());
     }
 
     @Test
@@ -215,15 +239,19 @@ public class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$." + errorField).exists());
+                .andExpect(jsonPath("$.errors[?(@.field == '" + errorField + "')]").exists());
     }
 
     @Test
     void updateUser_EmptyBody_Returns400() throws Exception {
+        when(userServiceImpl.updateUser(eq(1L), any(UserUpdateDto.class)))
+                .thenThrow(new IllegalArgumentException("Нужно заполнить хотя бы одно поле"));
+
         mockMvc.perform(patch("/api/users/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Нужно заполнить хотя бы одно поле"));
     }
 
     @Test
