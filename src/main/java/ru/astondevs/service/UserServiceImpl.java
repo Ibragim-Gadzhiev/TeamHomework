@@ -1,11 +1,8 @@
 package ru.astondevs.service;
 
 import java.util.List;
-import java.util.Optional;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.astondevs.dto.UserCreateDto;
@@ -15,6 +12,8 @@ import ru.astondevs.entity.User;
 import ru.astondevs.exception.DuplicateEmailException;
 import ru.astondevs.exception.ResourceNotFoundException;
 import ru.astondevs.repository.UserRepository;
+import ru.astondevs.util.UserConverter;
+import ru.astondevs.util.UserValidator;
 
 /**
  * Сервисный класс для управления пользователями.
@@ -23,8 +22,10 @@ import ru.astondevs.repository.UserRepository;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class UserServiceImpl {
+public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
+    private final UserValidator userValidator;
+    private final UserConverter userConverter;
 
     /**
      * Создаёт нового пользователя.
@@ -33,19 +34,13 @@ public class UserServiceImpl {
      * @return DTO с данными сохранённого пользователя
      * @throws DuplicateEmailException если указанный email уже существует
      */
-    @Transactional
+    @Override
     public UserResponseDto createUser(UserCreateDto dto) {
-        log.debug("Attempt to create user with email: {}", dto.email());
-        validateEmail(dto.email());
-
-        User user = User.builder()
-                .name(dto.name())
-                .email(dto.email())
-                .age(dto.age())
-                .build();
+        userValidator.validateCreateDto(dto);
+        User user = userConverter.toEntity(dto);
         User savedUser = userRepository.save(user);
-        log.info("User created successfully. ID: {}", savedUser.getId());
-        return convertToResponseDto(savedUser);
+        log.info("Created user with id: {}", user.getId());
+        return userConverter.toResponseDto(savedUser);
     }
 
     /**
@@ -55,10 +50,13 @@ public class UserServiceImpl {
      * @return DTO с данными пользователя
      * @throws ResourceNotFoundException если пользователь с данным ID не найден
      */
+    @Override
     @Transactional(readOnly = true)
     public UserResponseDto getUserById(Long id) {
-        log.debug("Fetching user by ID: {}", id);
-        return convertToResponseDto(getUserEntity(id));
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Пользователя с id: "
+                        + id + " не существует"));
+        return userConverter.toResponseDto(user);
     }
 
     /**
@@ -66,14 +64,12 @@ public class UserServiceImpl {
      *
      * @return список DTO всех пользователей
      */
+    @Override
     @Transactional(readOnly = true)
     public List<UserResponseDto> getAllUsers() {
-        log.debug("Fetching all users");
-        List<UserResponseDto> users = userRepository.findAll().stream()
-                .map(this::convertToResponseDto)
+        return userRepository.findAll().stream()
+                .map(userConverter::toResponseDto)
                 .toList();
-        log.info("Found {} users in total", users.size());
-        return users;
     }
 
     /**
@@ -85,30 +81,18 @@ public class UserServiceImpl {
      * @throws DuplicateEmailException   если обновлённый email уже существует
      * @throws ResourceNotFoundException если пользователь не найден
      */
+    @Override
     @Transactional
     public UserResponseDto updateUser(Long id, UserUpdateDto dto) {
-        log.info("Updating user ID: {}. Update data: {}", id, dto);
-        User user = getUserEntity(id);
+        userValidator.validateUpdateDto(dto);
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Пользователя с id: "
+                        + id + " не существует"));
 
-        Optional.ofNullable(dto.name()).ifPresent(name -> {
-            log.debug("Updating name for user {}: {}", id, name);
-            user.setName(name);
-        });
-
-        if (dto.email() != null && !dto.email().equals(user.getEmail())) {
-            log.debug("Email change requested for user {}: {}", id, dto.email());
-            validateEmail(dto.email());
-            user.setEmail(dto.email());
-        }
-
-        Optional.ofNullable(dto.age()).ifPresent(age -> {
-            log.debug("Updating age for user {}: {}", id, age);
-            user.setAge(age);
-        });
-
+        userConverter.updateEntity(user, dto);
         User updatedUser = userRepository.save(user);
-        log.info("User {} updated successfully", id);
-        return convertToResponseDto(updatedUser);
+        log.info("Updated user id: {}", id);
+        return userConverter.toResponseDto(updatedUser);
     }
 
     /**
@@ -117,43 +101,15 @@ public class UserServiceImpl {
      * @param id идентификатор пользователя
      * @throws ResourceNotFoundException если пользователь не найден
      */
+    @Override
     @Transactional
     public void deleteById(Long id) {
-        log.info("Deleting user with ID: {}", id);
-        try {
-            userRepository.deleteById(id);
-            log.debug("User {} deleted successfully", id);
-        } catch (EmptyResultDataAccessException ex) {
-            log.warn("Delete failed: User with ID {} not found", id);
+        if (!userRepository.existsById(id)) {
             throw new ResourceNotFoundException("Пользователя с id: "
                     + id + " не существует");
         }
-    }
 
-    private void validateEmail(String email) {
-        log.debug("Validating email uniqueness: {}", email);
-        if (userRepository.existsByEmail(email)) {
-            log.error("Email conflict detected: {}", email);
-            throw new DuplicateEmailException("Email " + email + " уже существует");
-        }
-    }
-
-    private User getUserEntity(Long id) {
-        return userRepository.findById(id)
-                .orElseThrow(() -> {
-                    log.error("User not found with ID: {}", id);
-                    return new ResourceNotFoundException("Пользователя с id: "
-                                    + id + " не существует");
-                });
-    }
-
-    private UserResponseDto convertToResponseDto(User user) {
-        return UserResponseDto.builder()
-                .id(user.getId())
-                .name(user.getName())
-                .email(user.getEmail())
-                .age(user.getAge())
-                .createdAt(user.getCreatedAt())
-                .build();
+        userRepository.deleteById(id);
+        log.info("Deleted user id: {}", id);
     }
 }
