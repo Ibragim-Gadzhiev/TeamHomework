@@ -16,40 +16,40 @@ import org.springframework.web.bind.annotation.RestController;
 import ru.astondevs.dto.UserCreateDto;
 import ru.astondevs.dto.UserResponseDto;
 import ru.astondevs.dto.UserUpdateDto;
-import ru.astondevs.service.UserService;
+import ru.astondevs.service.UserServiceImpl;
 
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
 public class UserController {
-    private final UserService userService;
+    private final UserServiceImpl userServiceImpl;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public UserResponseDto createUser(@Valid @RequestBody UserCreateDto dto) {
-        return userService.createUser(dto);
+        return userServiceImpl.createUser(dto);
     }
 
     @GetMapping("/{id}")
     public UserResponseDto getUserById(@PathVariable Long id) {
-        return userService.getUserById(id);
+        return userServiceImpl.getUserById(id);
     }
 
     @GetMapping
     public List<UserResponseDto> getAllUsers() {
-        return userService.getAllUsers();
+        return userServiceImpl.getAllUsers();
     }
 
     @PatchMapping("/{id}")
     public UserResponseDto updateUser(
             @PathVariable Long id,
             @Valid @RequestBody UserUpdateDto dto) {
-        return userService.updateUser(id, dto);
+        return userServiceImpl.updateUser(id, dto);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteUser(@PathVariable Long id) {
-        userService.deleteById(id);
+        userServiceImpl.deleteById(id);
     }
 }

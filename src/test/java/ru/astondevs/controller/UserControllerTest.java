@@ -20,7 +20,7 @@ import ru.astondevs.dto.UserResponseDto;
 import ru.astondevs.dto.UserUpdateDto;
 import ru.astondevs.exception.DuplicateEmailException;
 import ru.astondevs.exception.ResourceNotFoundException;
-import ru.astondevs.service.UserService;
+import ru.astondevs.service.UserServiceImpl;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -45,8 +45,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class UserControllerTest {
     static class TestConfig {
         @Bean
-        public UserService userService() {
-            return Mockito.mock(UserService.class);
+        public UserServiceImpl userService() {
+            return Mockito.mock(UserServiceImpl.class);
         }
     }
 
@@ -57,7 +57,7 @@ public class UserControllerTest {
     private ObjectMapper objectMapper;
 
     @Autowired
-    private UserService userService;
+    private UserServiceImpl userServiceImpl;
 
     private final UserResponseDto testUser = new UserResponseDto(
             1L,
@@ -69,13 +69,13 @@ public class UserControllerTest {
 
     @BeforeEach
     void setUp() {
-        Mockito.reset(userService);
+        Mockito.reset(userServiceImpl);
     }
 
     @Test
     void createUser_ValidRequest_Returns201() throws Exception {
         UserCreateDto createDto = new UserCreateDto("Test", "unknown.nvme@gmail.com", 30);
-        when(userService.createUser(any())).thenReturn(testUser);
+        when(userServiceImpl.createUser(any())).thenReturn(testUser);
 
         mockMvc.perform(post("/api/users")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -94,7 +94,7 @@ public class UserControllerTest {
                 1L, "Ibragim", "gadzhiev.ibragim@yandex.ru", 30, LocalDateTime.now()
         );
 
-        when(userService.createUser(any())).thenReturn(response);
+        when(userServiceImpl.createUser(any())).thenReturn(response);
 
         mockMvc.perform(post("/api/users")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -120,7 +120,7 @@ public class UserControllerTest {
     void createUser_DuplicateEmail_Returns409() throws Exception {
         UserCreateDto createDto = new UserCreateDto("Test", "duplicate@gmail.com", 30);
 
-        when(userService.createUser(any()))
+        when(userServiceImpl.createUser(any()))
                 .thenThrow(new DuplicateEmailException("Email уже используется"));
 
         mockMvc.perform(post("/api/users")
@@ -138,7 +138,7 @@ public class UserControllerTest {
                 1L, "Test", "unknown.nvme@gmail.com", age, LocalDateTime.now()
         );
 
-        when(userService.createUser(createDto)).thenReturn(response);
+        when(userServiceImpl.createUser(createDto)).thenReturn(response);
 
         mockMvc.perform(post("/api/users")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -149,7 +149,7 @@ public class UserControllerTest {
 
     @Test
     void getUserById_ExistingUser_Returns200() throws Exception {
-        when(userService.getUserById(1L)).thenReturn(testUser);
+        when(userServiceImpl.getUserById(1L)).thenReturn(testUser);
 
         mockMvc.perform(get("/api/users/1"))
                 .andExpect(status().isOk())
@@ -165,7 +165,7 @@ public class UserControllerTest {
                 new UserResponseDto(2L, "User 2", "user2@gmail.com", 25, LocalDateTime.now())
         );
 
-        when(userService.getAllUsers()).thenReturn(users);
+        when(userServiceImpl.getAllUsers()).thenReturn(users);
 
         mockMvc.perform(get("/api/users"))
                 .andExpect(status().isOk())
@@ -175,7 +175,7 @@ public class UserControllerTest {
 
     @Test
     void getAllUsers_EmptyList_ReturnsEmptyArray() throws Exception {
-        when(userService.getAllUsers()).thenReturn(Collections.emptyList());
+        when(userServiceImpl.getAllUsers()).thenReturn(Collections.emptyList());
         mockMvc.perform(get("/api/users"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
@@ -184,7 +184,7 @@ public class UserControllerTest {
 
     @Test
     void getUserById_NonExistingUser_Returns404() throws Exception {
-        when(userService.getUserById(999L))
+        when(userServiceImpl.getUserById(999L))
                 .thenThrow(new ResourceNotFoundException("Пользователь не найден"));
 
         mockMvc.perform(get("/api/users/999"))
@@ -199,7 +199,7 @@ public class UserControllerTest {
                 1L, "Ibragim Gadzhiev", "unknown.nvme@gmail.com", 30, testUser.createdAt()
         );
 
-        when(userService.updateUser(1L, updateDto)).thenReturn(updatedUser);
+        when(userServiceImpl.updateUser(1L, updateDto)).thenReturn(updatedUser);
 
         mockMvc.perform(patch("/api/users/1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -230,7 +230,7 @@ public class UserControllerTest {
     void updateUser_DuplicateEmail_Returns409() throws Exception {
         UserUpdateDto updateDto = new UserUpdateDto(null, "duplicate@gmail.com", null);
 
-        when(userService.updateUser(anyLong(), any()))
+        when(userServiceImpl.updateUser(anyLong(), any()))
                 .thenThrow(new DuplicateEmailException("Email уже используется"));
 
         mockMvc.perform(patch("/api/users/1")
@@ -247,7 +247,7 @@ public class UserControllerTest {
                 1L, testUser.name(), testUser.email(), 35, testUser.createdAt()
         );
 
-        when(userService.updateUser(1L, updateDto)).thenReturn(updatedUser);
+        when(userServiceImpl.updateUser(1L, updateDto)).thenReturn(updatedUser);
 
         mockMvc.perform(patch("/api/users/1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -261,13 +261,13 @@ public class UserControllerTest {
         mockMvc.perform(delete("/api/users/1"))
                 .andExpect(status().isNoContent());
 
-        verify(userService, times(1)).deleteById(1L);
+        verify(userServiceImpl, times(1)).deleteById(1L);
     }
 
     @Test
     void deleteUser_NonExistingUser_Returns404() throws Exception {
         doThrow(new ResourceNotFoundException("Пользователь не найден"))
-                .when(userService).deleteById(999L);
+                .when(userServiceImpl).deleteById(999L);
 
         mockMvc.perform(delete("/api/users/999"))
                 .andExpect(status().isNotFound())

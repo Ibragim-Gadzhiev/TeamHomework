@@ -23,7 +23,7 @@ import ru.astondevs.repository.UserRepository;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class UserService {
+public class UserServiceImpl {
     private final UserRepository userRepository;
 
     /**
