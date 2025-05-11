@@ -2,6 +2,7 @@ package ru.astondevs.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
@@ -21,18 +22,29 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class UserServiceImpl implements UserService {
+
     private final UserRepository userRepository;
     private final UserValidator userValidator;
     private final UserConverter userConverter;
+    private final KafkaProducer kafkaProducer;
 
     @Override
     public UserResponseDto createUser(UserCreateDto dto) {
-        log.info("Creating user with email: {}", dto.email());
-        userValidator.validateCreateDto(dto);
-        User user = userConverter.toEntity(dto);
-        User savedUser = userRepository.save(user);
-        log.info("Created user with id: {}", user.getId());
-        return userConverter.toResponseDto(savedUser);
+        try {
+            log.info("Creating user with email: {}", dto.email());
+            userValidator.validateCreateDto(dto);
+            User user = userConverter.toEntity(dto);
+            User savedUser = userRepository.save(user);
+
+            // Отправляем событие о создании
+            kafkaProducer.sendUserEvent("userAdd-topic",  dto.email());
+
+            log.info("Created user with id: {}", user.getId());
+            return userConverter.toResponseDto(savedUser);
+        } catch (Exception e) {
+            log.error("Error creating user: {}", e.getMessage(), e);
+            throw e; // или кастомное исключение
+        }
     }
 
     @Override
@@ -67,7 +79,12 @@ public class UserServiceImpl implements UserService {
     public void deleteById(Long id) {
         log.info("Deleting user id: {}", id);
         User user = findUserOrThrow(id);
+        String userEmail = user.getEmail(); // Сохраняем email перед удалением
         userRepository.delete(user);
+
+        // Отправляем событие об удалении
+        kafkaProducer.sendUserEvent("userDelete-topic", userEmail);
+
         log.info("Deleted user id: {}", id);
     }
 

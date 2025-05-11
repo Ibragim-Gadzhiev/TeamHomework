@@ -12,7 +12,7 @@ import ru.astondevs.repository.UserRepository;
 @Component
 @RequiredArgsConstructor
 public class UserValidator {
-    private final UserRepository userRepository;
+    private  UserRepository userRepository;
 
     public void validateCreateDto(UserCreateDto dto) {
         if (userRepository.existsByEmail(dto.email())) {
