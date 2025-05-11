@@ -57,9 +57,9 @@ public class UserServiceImpl implements UserService {
         userValidator.validateUpdateDto(dto);
         User user = findUserOrThrow(id);
         userConverter.updateEntity(user, dto);
-        User updatedUser = userRepository.save(user);
+//        User updatedUser = userRepository.save(user);
         log.info("Updated user id: {}", id);
-        return userConverter.toResponseDto(updatedUser);
+        return userConverter.toResponseDto(user);
     }
 
     @Override
