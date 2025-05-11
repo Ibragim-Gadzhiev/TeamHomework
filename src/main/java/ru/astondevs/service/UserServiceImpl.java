@@ -1,8 +1,5 @@
 package ru.astondevs.service;
 
-import java.util.List;
-
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -16,6 +13,8 @@ import ru.astondevs.exception.ResourceNotFoundException;
 import ru.astondevs.repository.UserRepository;
 import ru.astondevs.util.UserConverter;
 import ru.astondevs.util.UserValidator;
+
+import java.util.List;
 
 @Service
 @Validated
