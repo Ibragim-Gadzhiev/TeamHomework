@@ -1,10 +1,13 @@
 package ru.astondevs.service;
 
 import java.util.List;
+
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 import ru.astondevs.dto.UserCreateDto;
 import ru.astondevs.dto.UserResponseDto;
 import ru.astondevs.dto.UserUpdateDto;
@@ -15,6 +18,7 @@ import ru.astondevs.util.UserConverter;
 import ru.astondevs.util.UserValidator;
 
 @Service
+@Validated
 @RequiredArgsConstructor
 @Slf4j
 public class UserServiceImpl implements UserService {
