@@ -173,19 +173,34 @@ public class UserServiceImplTest {
     @Test
     void updateUser_ValidDto_ReturnsUpdateDto() {
         UserUpdateDto updateDto = new UserUpdateDto("Ibra", "unknown.nvme@gmail.com", 25);
-        User user = User.builder().id(1L).name("IbraVibra").build();
-        User updateUser = User.builder().id(1L).name("Ibra").build();
-        UserResponseDto responseDto = new UserResponseDto(1L, "Ibra", "unknown.nvme@gmail.com", 20, LocalDateTime.now());
+        User user = User.builder().id(1L).name("IbraVibra").email("gadzhiev.ibragim.for.spam@yandex.ru").age(20).build();
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+
+        doAnswer(inv -> {
+            User u = inv.getArgument(0);
+            UserUpdateDto dto = inv.getArgument(1);
+            if (dto.name() != null) u.setName(dto.name());
+            if (dto.email() != null) u.setEmail(dto.email());
+            if (dto.age() != null) u.setAge(dto.age());
+            return null;
+        }).when(userConverter).updateEntity(any(User.class), any(UserUpdateDto.class));
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        when(userRepository.save(user)).thenReturn(updateUser);
-        when(userConverter.toResponseDto(updateUser)).thenReturn(responseDto);
+        when(userConverter.toResponseDto(userCaptor.capture())).thenAnswer(inv -> {
+            User u = inv.getArgument(0);
+            return new UserResponseDto(u.getId(), u.getName(), u.getEmail(), u.getAge(), u.getCreatedAt());
+        });
 
         UserResponseDto result = userService.updateUser(1L, updateDto);
 
         assertEquals("Ibra", result.name());
         assertEquals("unknown.nvme@gmail.com", result.email());
-        assertEquals(20, result.age());
+        assertEquals(25, result.age());
+
+        User updatedUser = userCaptor.getValue();
+        assertEquals("Ibra", updatedUser.getName());
+        assertEquals("unknown.nvme@gmail.com", updatedUser.getEmail());
+        assertEquals(25, updatedUser.getAge());
 
         verify(userValidator).validateUpdateDto(updateDto);
     }
@@ -230,49 +245,36 @@ public class UserServiceImplTest {
     void updateUser_ValidPartialUpdate_Success() {
         Long userId = 1L;
         UserUpdateDto dto = new UserUpdateDto("Ibra", null, null);
-
         User existingUser = User.builder()
                 .id(userId)
                 .name("IbraVibra")
                 .email("gadzhiev.ibragim.for.spam@yandex.ru")
                 .age(20)
                 .build();
-
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
 
         doAnswer(inv -> {
-            User user = inv.getArgument(0);
+            User u = inv.getArgument(0);
             UserUpdateDto updateDto = inv.getArgument(1);
-            if (updateDto.name() != null) user.setName(updateDto.name());
+            if (updateDto.name() != null) u.setName(updateDto.name());
             return null;
         }).when(userConverter).updateEntity(any(User.class), any(UserUpdateDto.class));
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
-        when(userRepository.save(userCaptor.capture())).thenAnswer(inv -> inv.<User>getArgument(0));
-
-        when(userConverter.toResponseDto(any(User.class))).thenAnswer(inv -> {
-            User user = inv.getArgument(0);
-            return new UserResponseDto(
-                    user.getId(),
-                    user.getName(),
-                    user.getEmail(),
-                    user.getAge(),
-                    LocalDateTime.now()
-            );
+        when(userConverter.toResponseDto(userCaptor.capture())).thenAnswer(inv -> {
+            User u = inv.getArgument(0);
+            return new UserResponseDto(u.getId(), u.getName(), u.getEmail(), u.getAge(), u.getCreatedAt());
         });
 
         UserResponseDto result = userService.updateUser(userId, dto);
 
-        assertNotNull(result);
         assertEquals("Ibra", result.name());
+        assertEquals("gadzhiev.ibragim.for.spam@yandex.ru", result.email());
+        assertEquals(20, result.age());
 
-        User savedUser = userCaptor.getValue();
-        assertEquals("Ibra", savedUser.getName());
-        assertEquals("gadzhiev.ibragim.for.spam@yandex.ru", savedUser.getEmail());
-        assertEquals(20, savedUser.getAge());
-
+        User updatedUser = userCaptor.getValue();
+        assertEquals("Ibra", updatedUser.getName());
         verify(userValidator).validateUpdateDto(dto);
-        verify(userConverter).updateEntity(eq(existingUser), eq(dto));
     }
 
     @Test
@@ -282,12 +284,11 @@ public class UserServiceImplTest {
                 .id(1L)
                 .name("Ibra")
                 .email("unknown.nvme@gmail.com")
-                .age(30)
+                .age(25)
                 .createdAt(originalDate)
                 .build();
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(existingUser));
-        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(userConverter.toResponseDto(any(User.class))).thenAnswer(invocation -> {
             User user = invocation.getArgument(0);
             return new UserResponseDto(
@@ -337,7 +338,6 @@ public class UserServiceImplTest {
         }).when(userConverter).updateEntity(any(), any());
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
-        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
         when(userConverter.toResponseDto(any(User.class))).thenAnswer(inv -> {
             User user = inv.getArgument(0);
             return new UserResponseDto(
@@ -356,7 +356,6 @@ public class UserServiceImplTest {
         assertEquals(expectedAge, result.age());
 
         verify(userConverter).updateEntity(eq(existingUser), eq(dto));
-        verify(userRepository).save(existingUser);
         verify(userValidator).validateUpdateDto(dto);
     }
 
