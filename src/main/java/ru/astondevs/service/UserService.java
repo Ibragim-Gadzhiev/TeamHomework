@@ -1,5 +1,6 @@
 package ru.astondevs.service;
 
+import jakarta.validation.Valid;
 import java.util.List;
 import ru.astondevs.dto.UserCreateDto;
 import ru.astondevs.dto.UserResponseDto;
@@ -17,7 +18,7 @@ public interface UserService {
      * @return DTO созданного пользователя.
      * @throws ru.astondevs.exception.DuplicateEmailException Если email уже занят.
      */
-    UserResponseDto createUser(UserCreateDto dto);
+    UserResponseDto createUser(@Valid UserCreateDto dto);
 
     /**
      * Возвращает пользователя по ID.
@@ -44,7 +45,7 @@ public interface UserService {
      * @throws ru.astondevs.exception.ResourceNotFoundException Если пользователь не найден.
      * @throws ru.astondevs.exception.DuplicateEmailException Если новый email уже занят.
      */
-    UserResponseDto updateUser(Long id, UserUpdateDto dto);
+    UserResponseDto updateUser(Long id, @Valid UserUpdateDto dto);
 
     /**
      * Удаляет пользователя по ID.
