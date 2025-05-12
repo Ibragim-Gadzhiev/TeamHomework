@@ -18,7 +18,21 @@ public class KafkaProducerImpl implements KafkaProducer {
 
     @Override
     public void sendUserAddEvent(UserEventDto event) {
-        sendEvent(kafkaConfig.getUserAddTopic(), event);
+        if (event == null || event.operation() == null || event.email() == null) {
+            throw new IllegalArgumentException("Поля UserEventDto не должны быть пустыми");
+        }
+
+        String topic = kafkaConfig.getUserAddTopic();
+        if (topic == null) {
+            throw new IllegalArgumentException("Название топика Kafka не может быть пустым");
+        }
+
+        try {
+            String message = objectMapper.writeValueAsString(event);
+            kafkaTemplate.send(topic, message);
+        } catch (Exception e) {
+            throw new RuntimeException("Не удалось сериализовать событие", e);
+        }
     }
 
     @Override
@@ -33,7 +47,7 @@ public class KafkaProducerImpl implements KafkaProducer {
             log.info("Message sent to topic {}: {}", topic, message);
         } catch (Exception e) {
             log.error("Failed to send message to topic {}: {}", topic, e.getMessage());
-            throw new RuntimeException("Failed to send Kafka message", e);
+            throw new RuntimeException("Не удалось отправить сообщение в Kafka", e);
         }
     }
 }
