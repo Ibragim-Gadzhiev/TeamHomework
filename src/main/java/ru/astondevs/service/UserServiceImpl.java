@@ -2,11 +2,11 @@ package ru.astondevs.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import ru.astondevs.dto.UserCreateDto;
+import ru.astondevs.dto.UserEventDto;
 import ru.astondevs.dto.UserResponseDto;
 import ru.astondevs.dto.UserUpdateDto;
 import ru.astondevs.entity.User;
@@ -29,22 +29,29 @@ public class UserServiceImpl implements UserService {
     private final KafkaProducer kafkaProducer;
 
     @Override
+    @Transactional
+    public UserResponseDto createUserAndPublishEvent(UserCreateDto dto) {
+        UserResponseDto createdUser = createUser(dto);
+        kafkaProducer.sendUserAddEvent(new UserEventDto("create", dto.email()));
+        return createdUser;
+    }
+
+    @Override
+    @Transactional
+    public void deleteUserAndPublishEvent(Long id) {
+        UserResponseDto deletedUser = deleteAndReturnUserById(id);
+        kafkaProducer.sendUserDeleteEvent(new UserEventDto("delete", deletedUser.email()));
+    }
+
+    @Override
+    @Transactional
     public UserResponseDto createUser(UserCreateDto dto) {
-        try {
-            log.info("Creating user with email: {}", dto.email());
-            userValidator.validateCreateDto(dto);
-            User user = userConverter.toEntity(dto);
-            User savedUser = userRepository.save(user);
-
-            // Отправляем событие о создании
-            kafkaProducer.sendUserEvent("userAdd-topic",  dto.email());
-
-            log.info("Created user with id: {}", user.getId());
-            return userConverter.toResponseDto(savedUser);
-        } catch (Exception e) {
-            log.error("Error creating user: {}", e.getMessage(), e);
-            throw e; // или кастомное исключение
-        }
+        log.info("Creating user with email: {}", dto.email());
+        userValidator.validateCreateDto(dto);
+        User user = userConverter.toEntity(dto);
+        User savedUser = userRepository.save(user);
+        log.info("Created user with id: {}", user.getId());
+        return userConverter.toResponseDto(savedUser);
     }
 
     @Override
@@ -69,7 +76,6 @@ public class UserServiceImpl implements UserService {
         userValidator.validateUpdateDto(dto);
         User user = findUserOrThrow(id);
         userConverter.updateEntity(user, dto);
-//        User updatedUser = userRepository.save(user);
         log.info("Updated user id: {}", id);
         return userConverter.toResponseDto(user);
     }
@@ -79,13 +85,16 @@ public class UserServiceImpl implements UserService {
     public void deleteById(Long id) {
         log.info("Deleting user id: {}", id);
         User user = findUserOrThrow(id);
-        String userEmail = user.getEmail(); // Сохраняем email перед удалением
         userRepository.delete(user);
-
-        // Отправляем событие об удалении
-        kafkaProducer.sendUserEvent("userDelete-topic", userEmail);
-
         log.info("Deleted user id: {}", id);
+    }
+
+    @Override
+    @Transactional
+    public UserResponseDto deleteAndReturnUserById(Long id) {
+        User user = findUserOrThrow(id);
+        userRepository.delete(user);
+        return userConverter.toResponseDto(user);
     }
 
     private User findUserOrThrow(Long id) {
