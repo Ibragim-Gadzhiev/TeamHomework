@@ -3,7 +3,6 @@ package ru.astondevs.controller;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,19 +20,12 @@ import ru.astondevs.dto.UserUpdateDto;
 import ru.astondevs.service.KafkaProducer;
 import ru.astondevs.service.UserService;
 
-
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
     private final KafkaProducer kafkaProducer;
-
-    @Value("${kafka.topics.userAdd}")
-    private String userAddTopic;
-
-    @Value("${kafka.topics.userDelete}")
-    private String userDeleteTopic;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
