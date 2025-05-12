@@ -30,10 +30,8 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserResponseDto createUserAndPublishEvent(UserCreateDto dto) {
-        System.out.println("Start: createUser");
         UserResponseDto createdUser = createUser(dto);
         kafkaProducer.sendUserAddEvent(new UserEventDto("create", dto.email()));
-        System.out.println("End: createUser");
         return createdUser;
     }
 
