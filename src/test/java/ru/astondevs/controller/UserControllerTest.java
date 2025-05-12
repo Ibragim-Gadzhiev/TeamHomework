@@ -22,6 +22,8 @@ import ru.astondevs.dto.UserUpdateDto;
 import ru.astondevs.exception.DuplicateEmailException;
 import ru.astondevs.exception.ResourceNotFoundException;
 import ru.astondevs.service.KafkaProducer;
+import ru.astondevs.service.KafkaProducerImpl;
+import ru.astondevs.service.UserService;
 import ru.astondevs.service.UserServiceImpl;
 
 import java.time.LocalDateTime;
@@ -48,13 +50,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class UserControllerTest {
     static class TestConfig {
         @Bean
-        public UserServiceImpl userService() {
+        public UserService userService() {
             return Mockito.mock(UserServiceImpl.class);
         }
 
         @Bean
         public KafkaProducer kafkaProducer() {
-            return Mockito.mock(KafkaProducer.class);
+            return Mockito.mock(KafkaProducerImpl.class);
         }
 
         @Bean
@@ -73,36 +75,36 @@ public class UserControllerTest {
     private ObjectMapper objectMapper;
 
     @Autowired
-    private UserServiceImpl userServiceImpl;
+    private UserService userService;
 
     @Autowired
     private KafkaProducer kafkaProducer;
 
     private final UserResponseDto testUser = new UserResponseDto(
             1L,
-            "Test",
+            "Ibra",
             "unknown.nvme@gmail.com",
-            30,
+            25,
             LocalDateTime.now()
     );
 
     @BeforeEach
     void setUp() {
-        Mockito.reset(userServiceImpl, kafkaProducer);
+        Mockito.reset(userService, kafkaProducer);
     }
 
     @Test
     void createUser_ValidRequest_Returns201() throws Exception {
-        UserCreateDto createDto = new UserCreateDto("Test", "unknown.nvme@gmail.com", 30);
-        when(userServiceImpl.createUser(any())).thenReturn(testUser);
+        UserCreateDto createDto = new UserCreateDto("IbraVibra", "gadzhiev.ibragim.for.spam@yandex.ru", 25);
+        when(userService.createUser(any())).thenReturn(testUser);
 
         mockMvc.perform(post("/api/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createDto)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.name").value("Test"))
-                .andExpect(jsonPath("$.age").value(30))
+                .andExpect(jsonPath("$.name").value("Ibra"))
+                .andExpect(jsonPath("$.age").value(25))
                 .andExpect(jsonPath("$.email").value("unknown.nvme@gmail.com"));
 
         verify(kafkaProducer, times(1)).sendUserAddEvent(any(UserEventDto.class));
@@ -110,19 +112,19 @@ public class UserControllerTest {
 
     @Test
     void createUser_VerifyAllResponseFields() throws Exception {
-        UserCreateDto createDto = new UserCreateDto("Ibragim", "gadzhiev.ibragim@yandex.ru", 30);
+        UserCreateDto createDto = new UserCreateDto("Ibra", "gadzhiev.ibragim.for.spam@yandex.ru", 30);
         UserResponseDto response = new UserResponseDto(
-                1L, "Ibragim", "gadzhiev.ibragim@yandex.ru", 30, LocalDateTime.now()
+                1L, "Ibra", "gadzhiev.ibragim.for.spam@yandex.ru", 30, LocalDateTime.now()
         );
 
-        when(userServiceImpl.createUser(any())).thenReturn(response);
+        when(userService.createUser(any())).thenReturn(response);
 
         mockMvc.perform(post("/api/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createDto)))
                 .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.name").value("Ibragim"))
-                .andExpect(jsonPath("$.email").value("gadzhiev.ibragim@yandex.ru"))
+                .andExpect(jsonPath("$.name").value("Ibra"))
+                .andExpect(jsonPath("$.email").value("gadzhiev.ibragim.for.spam@yandex.ru"))
                 .andExpect(jsonPath("$.age").value(30))
                 .andExpect(jsonPath("$.createdAt").exists());
     }
@@ -140,7 +142,7 @@ public class UserControllerTest {
     @ParameterizedTest
     @ValueSource(ints = {-1, 121})
     void createUser_InvalidAge_Returns400(int age) throws Exception {
-        UserCreateDto dto = new UserCreateDto("Test", "test@mail.com", age);
+        UserCreateDto dto = new UserCreateDto("IbraVibra", "gadzhiev.ibragim.for.spam@yandex.ru", age);
 
         mockMvc.perform(post("/api/users")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -152,7 +154,7 @@ public class UserControllerTest {
     @ParameterizedTest
     @ValueSource(strings = {"A", "NameWithMoreThan50Characters_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"})
     void createUser_InvalidName_Returns400(String name) throws Exception {
-        UserCreateDto dto = new UserCreateDto(name, "test@mail.com", 30);
+        UserCreateDto dto = new UserCreateDto(name, "gadzhiev.ibragim.for.spam@yandex.ru", 30);
         mockMvc.perform(post("/api/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
@@ -164,7 +166,7 @@ public class UserControllerTest {
     void createUser_DuplicateEmail_Returns409() throws Exception {
         UserCreateDto createDto = new UserCreateDto("Test", "duplicate@gmail.com", 30);
 
-        when(userServiceImpl.createUser(any()))
+        when(userService.createUser(any()))
                 .thenThrow(new DuplicateEmailException("Email уже используется"));
 
         mockMvc.perform(post("/api/users")
@@ -182,7 +184,7 @@ public class UserControllerTest {
                 1L, "Test", "unknown.nvme@gmail.com", age, LocalDateTime.now()
         );
 
-        when(userServiceImpl.createUser(createDto)).thenReturn(response);
+        when(userService.createUser(createDto)).thenReturn(response);
 
         mockMvc.perform(post("/api/users")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -193,13 +195,13 @@ public class UserControllerTest {
 
     @Test
     void getUserById_ExistingUser_Returns200() throws Exception {
-        when(userServiceImpl.getUserById(1L)).thenReturn(testUser);
+        when(userService.getUserById(1L)).thenReturn(testUser);
 
         mockMvc.perform(get("/api/users/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email").value("unknown.nvme@gmail.com"))
-                .andExpect(jsonPath("$.age").value(30))
-                .andExpect(jsonPath("$.name").value("Test"));
+                .andExpect(jsonPath("$.age").value(25))
+                .andExpect(jsonPath("$.name").value("Ibra"));
     }
 
     @Test
@@ -209,7 +211,7 @@ public class UserControllerTest {
                 new UserResponseDto(2L, "User 2", "user2@gmail.com", 25, LocalDateTime.now())
         );
 
-        when(userServiceImpl.getAllUsers()).thenReturn(users);
+        when(userService.getAllUsers()).thenReturn(users);
 
         mockMvc.perform(get("/api/users"))
                 .andExpect(status().isOk())
@@ -219,7 +221,7 @@ public class UserControllerTest {
 
     @Test
     void getAllUsers_EmptyList_ReturnsEmptyArray() throws Exception {
-        when(userServiceImpl.getAllUsers()).thenReturn(Collections.emptyList());
+        when(userService.getAllUsers()).thenReturn(Collections.emptyList());
         mockMvc.perform(get("/api/users"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
@@ -228,7 +230,7 @@ public class UserControllerTest {
 
     @Test
     void getUserById_NonExistingUser_Returns404() throws Exception {
-        when(userServiceImpl.getUserById(999L))
+        when(userService.getUserById(999L))
                 .thenThrow(new ResourceNotFoundException("Пользователь не найден"));
 
         mockMvc.perform(get("/api/users/999"))
@@ -243,7 +245,7 @@ public class UserControllerTest {
                 1L, "Ibragim Gadzhiev", "unknown.nvme@gmail.com", 30, testUser.createdAt()
         );
 
-        when(userServiceImpl.updateUser(1L, updateDto)).thenReturn(updatedUser);
+        when(userService.updateUser(1L, updateDto)).thenReturn(updatedUser);
 
         mockMvc.perform(patch("/api/users/1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -264,7 +266,7 @@ public class UserControllerTest {
 
     @Test
     void updateUser_EmptyBody_Returns400() throws Exception {
-        when(userServiceImpl.updateUser(eq(1L), any(UserUpdateDto.class)))
+        when(userService.updateUser(eq(1L), any(UserUpdateDto.class)))
                 .thenThrow(new IllegalArgumentException("Нужно заполнить хотя бы одно поле"));
 
         mockMvc.perform(patch("/api/users/1")
@@ -278,7 +280,7 @@ public class UserControllerTest {
     void updateUser_DuplicateEmail_Returns409() throws Exception {
         UserUpdateDto updateDto = new UserUpdateDto(null, "duplicate@gmail.com", null);
 
-        when(userServiceImpl.updateUser(anyLong(), any()))
+        when(userService.updateUser(anyLong(), any()))
                 .thenThrow(new DuplicateEmailException("Email уже используется"));
 
         mockMvc.perform(patch("/api/users/1")
@@ -295,7 +297,7 @@ public class UserControllerTest {
                 1L, testUser.name(), testUser.email(), 35, testUser.createdAt()
         );
 
-        when(userServiceImpl.updateUser(1L, updateDto)).thenReturn(updatedUser);
+        when(userService.updateUser(1L, updateDto)).thenReturn(updatedUser);
 
         mockMvc.perform(patch("/api/users/1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -309,14 +311,14 @@ public class UserControllerTest {
         mockMvc.perform(delete("/api/users/1"))
                 .andExpect(status().isNoContent());
 
-        verify(userServiceImpl, times(1)).deleteById(1L);
+        verify(userService, times(1)).deleteById(1L);
         verify(kafkaProducer, times(1)).sendUserDeleteEvent(any(UserEventDto.class));
     }
 
     @Test
     void deleteUser_NonExistingUser_Returns404() throws Exception {
         doThrow(new ResourceNotFoundException("Пользователь не найден"))
-                .when(userServiceImpl).deleteById(999L);
+                .when(userService).deleteById(999L);
 
         mockMvc.perform(delete("/api/users/999"))
                 .andExpect(status().isNotFound())
