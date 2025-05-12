@@ -1,6 +1,5 @@
 package ru.astondevs.controller;
 
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,11 +14,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import ru.astondevs.config.KafkaConfig;
 import ru.astondevs.dto.UserCreateDto;
+import ru.astondevs.dto.UserEventDto;
 import ru.astondevs.dto.UserResponseDto;
 import ru.astondevs.dto.UserUpdateDto;
 import ru.astondevs.exception.DuplicateEmailException;
 import ru.astondevs.exception.ResourceNotFoundException;
+import ru.astondevs.service.KafkaProducer;
 import ru.astondevs.service.UserServiceImpl;
 
 import java.time.LocalDateTime;
@@ -49,6 +51,19 @@ public class UserControllerTest {
         public UserServiceImpl userService() {
             return Mockito.mock(UserServiceImpl.class);
         }
+
+        @Bean
+        public KafkaProducer kafkaProducer() {
+            return Mockito.mock(KafkaProducer.class);
+        }
+
+        @Bean
+        public KafkaConfig kafkaConfig() {
+            KafkaConfig kafkaConfig = Mockito.mock(KafkaConfig.class);
+            when(kafkaConfig.getUserAddTopic()).thenReturn("userAdd-topic");
+            when(kafkaConfig.getUserDeleteTopic()).thenReturn("userDelete-topic");
+            return kafkaConfig;
+        }
     }
 
     @Autowired
@@ -60,6 +75,9 @@ public class UserControllerTest {
     @Autowired
     private UserServiceImpl userServiceImpl;
 
+    @Autowired
+    private KafkaProducer kafkaProducer;
+
     private final UserResponseDto testUser = new UserResponseDto(
             1L,
             "Test",
@@ -70,7 +88,7 @@ public class UserControllerTest {
 
     @BeforeEach
     void setUp() {
-        Mockito.reset(userServiceImpl);
+        Mockito.reset(userServiceImpl, kafkaProducer);
     }
 
     @Test
@@ -86,6 +104,8 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$.name").value("Test"))
                 .andExpect(jsonPath("$.age").value(30))
                 .andExpect(jsonPath("$.email").value("unknown.nvme@gmail.com"));
+
+        verify(kafkaProducer, times(1)).sendUserAddEvent(any(UserEventDto.class));
     }
 
     @Test
@@ -290,6 +310,7 @@ public class UserControllerTest {
                 .andExpect(status().isNoContent());
 
         verify(userServiceImpl, times(1)).deleteById(1L);
+        verify(kafkaProducer, times(1)).sendUserDeleteEvent(any(UserEventDto.class));
     }
 
     @Test
