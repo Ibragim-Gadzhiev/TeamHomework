@@ -8,24 +8,32 @@ import org.springframework.stereotype.Service;
 import ru.astondevs.dto.UserEventDto;
 import ru.astondevs.notification.AccountStatusNotificationSender;
 
-@Slf4j
-@RequiredArgsConstructor
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class KafkaConsumer {
     private final ObjectMapper objectMapper;
+    private final EmailNotificationService emailNotificationService;
 
-    @KafkaListener(topics = "userAdd-topic", groupId = "my-group")
+    @KafkaListener(topics = "${kafka.topics.userAdd}", groupId = "${kafka.group-id}")
     public void listenUserAddTopic(String message) {
         try {
             UserEventDto event = objectMapper.readValue(message, UserEventDto.class);
-            AccountStatusNotificationSender.createNotifyAboutCreatingAccount(event.email());
+            emailNotificationService.sendEmail(event.email(), "Account Created",
+                    "Здравствуйте! Ваш аккаунт на сайте был успешно создан.");
         } catch (Exception e) {
-            log.error("Error processing message: {}", message, e);
+            log.error("Error processing message from userAdd-topic: {}", message, e);
         }
     }
 
-    @KafkaListener(topics = "userDelete-topic", groupId = "my-group")
+    @KafkaListener(topics = "${kafka.topics.userDelete}", groupId = "${kafka.group-id}")
     public void listenUserDeleteTopic(String message) {
-        AccountStatusNotificationSender.createNotifyAboutDeletingAccount(message);
+        try {
+            UserEventDto event = objectMapper.readValue(message, UserEventDto.class);
+            emailNotificationService.sendEmail(event.email(), "Account Deleted",
+                    "Здравствуйте! Ваш аккаунт был удалён.");
+        } catch (Exception e) {
+            log.error("Error processing message from userDelete-topic: {}", message, e);
+        }
     }
 }
