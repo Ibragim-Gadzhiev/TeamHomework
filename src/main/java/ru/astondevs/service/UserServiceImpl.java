@@ -1,5 +1,6 @@
 package ru.astondevs.service;
 
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -15,8 +16,6 @@ import ru.astondevs.repository.UserRepository;
 import ru.astondevs.util.UserConverter;
 import ru.astondevs.util.UserValidator;
 
-import java.util.List;
-
 @Service
 @Validated
 @RequiredArgsConstructor
@@ -31,8 +30,10 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserResponseDto createUserAndPublishEvent(UserCreateDto dto) {
+        System.out.println("Start: createUser");
         UserResponseDto createdUser = createUser(dto);
         kafkaProducer.sendUserAddEvent(new UserEventDto("create", dto.email()));
+        System.out.println("End: createUser");
         return createdUser;
     }
 
