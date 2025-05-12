@@ -15,8 +15,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import ru.astondevs.dto.UserCreateDto;
+import ru.astondevs.dto.UserEventDto;
 import ru.astondevs.dto.UserResponseDto;
 import ru.astondevs.dto.UserUpdateDto;
+import ru.astondevs.service.KafkaProducer;
 import ru.astondevs.service.UserService;
 
 
@@ -25,6 +27,7 @@ import ru.astondevs.service.UserService;
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
+    private final KafkaProducer kafkaProducer;
 
     @Value("${kafka.topics.userAdd}")
     private String userAddTopic;
@@ -35,7 +38,9 @@ public class UserController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public UserResponseDto createUser(@Valid @RequestBody UserCreateDto dto) {
-        return userService.createUserAndPublishEvent(dto);
+        UserResponseDto createdUser = userService.createUser(dto);
+        kafkaProducer.sendUserAddEvent(new UserEventDto("create", dto.email()));
+        return createdUser;
     }
 
     @GetMapping("/{id}")
@@ -58,6 +63,7 @@ public class UserController {
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteUser(@PathVariable Long id) {
-        userService.deleteUserAndPublishEvent(id);
+        userService.deleteById(id);
+        kafkaProducer.sendUserDeleteEvent(new UserEventDto("delete", "unknown.nvme@gmail.com"));
     }
 }
