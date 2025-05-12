@@ -15,7 +15,7 @@ import ru.astondevs.dto.UserEventDto;
 public class KafkaConsumerImpl implements KafkaConsumer {
 
     private final ObjectMapper objectMapper;
-    private final EmailNotificationServiceImpl emailNotificationService;
+    private final EmailNotificationService emailNotificationService;
 
     @Override
     @KafkaListener(topics = "${kafka.topics.userAdd}", groupId = "${spring.kafka.consumer.group-id}")
