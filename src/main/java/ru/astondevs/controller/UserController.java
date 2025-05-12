@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import ru.astondevs.dto.UserCreateDto;
+import ru.astondevs.dto.UserEventDto;
 import ru.astondevs.dto.UserResponseDto;
 import ru.astondevs.dto.UserUpdateDto;
 import ru.astondevs.service.KafkaProducer;
@@ -30,7 +31,7 @@ public class UserController {
     @ResponseStatus(HttpStatus.CREATED)
     public UserResponseDto createUser(@Valid @RequestBody UserCreateDto dto) {
         UserResponseDto createdUser = userService.createUser(dto);
-        kafkaProducer.sendUserEvent("user-events", "User created: " + createdUser);
+        kafkaProducer.sendUserEvent("user-events", new UserEventDto("create", dto.email()));
         return createdUser;
     }
 
@@ -54,7 +55,8 @@ public class UserController {
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteUser(@PathVariable Long id) {
+        UserResponseDto user = userService.getUserById(id);
         userService.deleteById(id);
-        kafkaProducer.sendUserEvent("user-events", "User deleted: " + id);
+        kafkaProducer.sendUserEvent("user-events", new UserEventDto("delete", user.email()));
     }
 }
