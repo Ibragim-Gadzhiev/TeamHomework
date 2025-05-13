@@ -19,6 +19,10 @@ public class UserValidator {
             log.error("Email already exists: {}", dto.email());
             throw new DuplicateEmailException("Email уже существует");
         }
+        if (dto.age() != null && (dto.age() < 0 || dto.age() > 120)) {
+            log.error("Invalid age provided: {}", dto.age());
+            throw new IllegalArgumentException("Возраст должен быть в пределах от 0 до 120 лет");
+        }
     }
 
     public void validateUpdateDto(UserUpdateDto dto) {
