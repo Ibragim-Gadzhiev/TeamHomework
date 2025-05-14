@@ -173,7 +173,7 @@ public class UserControllerTest {
 
     @Test
     void createUser_DuplicateEmail_Returns409() throws Exception {
-        UserCreateDto createDto = new UserCreateDto("Test", "duplicate@gmail.com", 30);
+        UserCreateDto createDto = new UserCreateDto("Ibra", "duplicate@gmail.com", 30);
 
         when(userServiceFacade.createUserAndPublishEvent(any()))
                 .thenThrow(new DuplicateEmailException("Email уже используется"));
@@ -188,9 +188,9 @@ public class UserControllerTest {
     @ParameterizedTest
     @ValueSource(ints = {0, 120})
     void createUser_ValidAgeBoundaries_Returns201(int age) throws Exception {
-        UserCreateDto createDto = new UserCreateDto("Test", "unknown.nvme@gmail.com", age);
+        UserCreateDto createDto = new UserCreateDto("Ibra", "unknown.nvme@gmail.com", age);
         UserResponseDto response = new UserResponseDto(
-                1L, "Test", "unknown.nvme@gmail.com", age, LocalDateTime.now()
+                1L, "Ibra", "unknown.nvme@gmail.com", age, LocalDateTime.now()
         );
 
         when(userServiceFacade.createUserAndPublishEvent(createDto)).thenReturn(response);
@@ -217,7 +217,7 @@ public class UserControllerTest {
     void getAllUsers_WithResults_ReturnsFullList() throws Exception {
         List<UserResponseDto> users = List.of(
                 testUser,
-                new UserResponseDto(2L, "User 2", "user2@gmail.com", 25, LocalDateTime.now())
+                new UserResponseDto(2L, "IbraVibra", "gadzhive.ibragim.for.spam@yandex.ru", 25, LocalDateTime.now())
         );
 
         when(userService.getAllUsers()).thenReturn(users);
@@ -225,7 +225,7 @@ public class UserControllerTest {
         mockMvc.perform(get("/api/users"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[1].email").value("user2@gmail.com"));
+                .andExpect(jsonPath("$[1].email").value("gadzhive.ibragim.for.spam@yandex.ru"));
     }
 
     @Test
@@ -251,7 +251,7 @@ public class UserControllerTest {
     void updateUser_ValidRequest_Returns200() throws Exception {
         UserUpdateDto updateDto = new UserUpdateDto("Ibragim Gadzhiev", null, null);
         UserResponseDto updatedUser = new UserResponseDto(
-                1L, "Ibragim Gadzhiev", "unknown.nvme@gmail.com", 30, testUser.createdAt()
+                1L, "Ibragim Gadzhiev", "unknown.nvme@gmail.com", 25, testUser.createdAt()
         );
 
         when(userService.updateUser(1L, updateDto)).thenReturn(updatedUser);
