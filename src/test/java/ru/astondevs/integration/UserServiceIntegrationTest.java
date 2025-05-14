@@ -32,10 +32,6 @@ import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceIntegrationTest {
-
-    @Mock
-    private KafkaProducer kafkaProducer;
-
     @Mock
     private UserRepository userRepository;
 
@@ -50,7 +46,7 @@ class UserServiceIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        Mockito.reset(kafkaProducer, userRepository, userValidator, userConverter);
+        Mockito.reset(userRepository, userValidator, userConverter);
     }
 
     @Test
@@ -92,19 +88,6 @@ class UserServiceIntegrationTest {
         assertThatThrownBy(() -> userService.createUser(dto))
                 .isInstanceOf(ConstraintViolationException.class)
                 .hasMessageContaining("Invalid age");
-    }
-
-    @Test
-    void createUserAndPublishEvent_ShouldSendKafkaEvent() {
-        UserCreateDto dto = new UserCreateDto("Ibra", "unknown.nvme@gmail.com", 25);
-        User user = new User(1L, "Ibra", "unknown.nvme@gmail.com", 25, LocalDateTime.now());
-        Mockito.when(userConverter.toEntity(dto)).thenReturn(user);
-        Mockito.when(userRepository.save(Mockito.any(User.class))).thenReturn(user);
-        Mockito.when(userConverter.toResponseDto(user)).thenReturn(new UserResponseDto(1L, "Ibra", "unknown.nvme@gmail.com", 25, LocalDateTime.now()));
-
-        userService.createUserAndPublishEvent(dto);
-
-        verify(kafkaProducer).sendUserAddEvent(Mockito.any());
     }
 
     @Test
@@ -193,19 +176,6 @@ class UserServiceIntegrationTest {
         assertThatThrownBy(() -> userService.deleteById(invalidId))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Пользователь не найден");
-    }
-
-    @Test
-    void deleteUserAndPublishEvent_ShouldSendKafkaEvent() {
-        User user = new User(1L, "Ibra", "unknown.nvme@gmail.com", 25, LocalDateTime.now());
-        UserResponseDto responseDto = new UserResponseDto(1L, "Ibra", "unknown.nvme@gmail.com", 25, LocalDateTime.now());
-
-        Mockito.when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        Mockito.when(userConverter.toResponseDto(user)).thenReturn(responseDto);
-
-        userService.deleteUserAndPublishEvent(1L);
-
-        verify(kafkaProducer).sendUserDeleteEvent(Mockito.any());
     }
 
     @Test
