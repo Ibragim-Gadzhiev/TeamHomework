@@ -1,6 +1,8 @@
 package ru.astondevs.exception;
 
+import jakarta.mail.MessagingException;
 import org.springframework.http.HttpStatus;
+import org.springframework.kafka.KafkaException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -45,6 +47,18 @@ public class GlobalExceptionHandler {
                 .toList();
 
         return Map.of("errors", errors);
+    }
+
+    @ExceptionHandler(KafkaException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorResponse handleKafkaException(Exception ex) {
+        return new ErrorResponse("Kafka error: " + ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(MessagingException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorResponse handleMessagingException(Exception ex) {
+        return new ErrorResponse("Email error: " + ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     public record ValidationError(String field, String message) {}

@@ -1,11 +1,13 @@
 package ru.astondevs.service;
 
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import ru.astondevs.dto.UserCreateDto;
+import ru.astondevs.dto.UserEventDto;
 import ru.astondevs.dto.UserResponseDto;
 import ru.astondevs.dto.UserUpdateDto;
 import ru.astondevs.entity.User;
@@ -14,18 +16,34 @@ import ru.astondevs.repository.UserRepository;
 import ru.astondevs.util.UserConverter;
 import ru.astondevs.util.UserValidator;
 
-import java.util.List;
-
 @Service
 @Validated
 @RequiredArgsConstructor
 @Slf4j
 public class UserServiceImpl implements UserService {
+
     private final UserRepository userRepository;
     private final UserValidator userValidator;
     private final UserConverter userConverter;
+    private final KafkaProducer kafkaProducer;
 
     @Override
+    @Transactional
+    public UserResponseDto createUserAndPublishEvent(UserCreateDto dto) {
+        UserResponseDto createdUser = createUser(dto);
+        kafkaProducer.sendUserAddEvent(new UserEventDto("create", dto.email()));
+        return createdUser;
+    }
+
+    @Override
+    @Transactional
+    public void deleteUserAndPublishEvent(Long id) {
+        UserResponseDto deletedUser = deleteAndReturnUserById(id);
+        kafkaProducer.sendUserDeleteEvent(new UserEventDto("delete", deletedUser.email()));
+    }
+
+    @Override
+    @Transactional
     public UserResponseDto createUser(UserCreateDto dto) {
         log.info("Creating user with email: {}", dto.email());
         userValidator.validateCreateDto(dto);
@@ -57,7 +75,6 @@ public class UserServiceImpl implements UserService {
         userValidator.validateUpdateDto(dto);
         User user = findUserOrThrow(id);
         userConverter.updateEntity(user, dto);
-//        User updatedUser = userRepository.save(user);
         log.info("Updated user id: {}", id);
         return userConverter.toResponseDto(user);
     }
@@ -69,6 +86,14 @@ public class UserServiceImpl implements UserService {
         User user = findUserOrThrow(id);
         userRepository.delete(user);
         log.info("Deleted user id: {}", id);
+    }
+
+    @Override
+    @Transactional
+    public UserResponseDto deleteAndReturnUserById(Long id) {
+        User user = findUserOrThrow(id);
+        userRepository.delete(user);
+        return userConverter.toResponseDto(user);
     }
 
     private User findUserOrThrow(Long id) {
