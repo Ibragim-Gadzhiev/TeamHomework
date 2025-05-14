@@ -16,14 +16,15 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.astondevs.config.KafkaConfig;
 import ru.astondevs.dto.UserCreateDto;
-import ru.astondevs.dto.UserEventDto;
 import ru.astondevs.dto.UserResponseDto;
 import ru.astondevs.dto.UserUpdateDto;
 import ru.astondevs.exception.DuplicateEmailException;
 import ru.astondevs.exception.ResourceNotFoundException;
 import ru.astondevs.service.KafkaProducer;
-import ru.astondevs.service.impl.KafkaProducerImpl;
 import ru.astondevs.service.UserService;
+import ru.astondevs.service.UserServiceFacade;
+import ru.astondevs.service.impl.KafkaProducerImpl;
+import ru.astondevs.service.impl.UserServiceFacadeImpl;
 import ru.astondevs.service.impl.UserServiceImpl;
 
 import java.time.LocalDateTime;
@@ -55,6 +56,11 @@ public class UserControllerTest {
         }
 
         @Bean
+        public UserServiceFacade userServiceFacade() {
+            return Mockito.mock(UserServiceFacadeImpl.class);
+        }
+
+        @Bean
         public KafkaProducer kafkaProducer() {
             return Mockito.mock(KafkaProducerImpl.class);
         }
@@ -78,6 +84,9 @@ public class UserControllerTest {
     private UserService userService;
 
     @Autowired
+    private UserServiceFacade userServiceFacade;
+
+    @Autowired
     private KafkaProducer kafkaProducer;
 
     private final UserResponseDto testUser = new UserResponseDto(
@@ -90,13 +99,13 @@ public class UserControllerTest {
 
     @BeforeEach
     void setUp() {
-        Mockito.reset(userService, kafkaProducer);
+        Mockito.reset(userService, userServiceFacade, kafkaProducer);
     }
 
     @Test
     void createUser_ValidRequest_Returns201() throws Exception {
         UserCreateDto createDto = new UserCreateDto("IbraVibra", "gadzhiev.ibragim.for.spam@yandex.ru", 25);
-        when(userService.createUser(any())).thenReturn(testUser);
+        when(userServiceFacade.createUserAndPublishEvent(any())).thenReturn(testUser);
 
         mockMvc.perform(post("/api/users")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -107,7 +116,7 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$.age").value(25))
                 .andExpect(jsonPath("$.email").value("unknown.nvme@gmail.com"));
 
-        verify(kafkaProducer, times(1)).sendUserAddEvent(any(UserEventDto.class));
+        verify(userServiceFacade, times(1)).createUserAndPublishEvent(any(UserCreateDto.class));
     }
 
     @Test
@@ -117,7 +126,7 @@ public class UserControllerTest {
                 1L, "Ibra", "gadzhiev.ibragim.for.spam@yandex.ru", 30, LocalDateTime.now()
         );
 
-        when(userService.createUser(any())).thenReturn(response);
+        when(userServiceFacade.createUserAndPublishEvent(any())).thenReturn(response);
 
         mockMvc.perform(post("/api/users")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -166,7 +175,7 @@ public class UserControllerTest {
     void createUser_DuplicateEmail_Returns409() throws Exception {
         UserCreateDto createDto = new UserCreateDto("Test", "duplicate@gmail.com", 30);
 
-        when(userService.createUser(any()))
+        when(userServiceFacade.createUserAndPublishEvent(any()))
                 .thenThrow(new DuplicateEmailException("Email уже используется"));
 
         mockMvc.perform(post("/api/users")
@@ -184,7 +193,7 @@ public class UserControllerTest {
                 1L, "Test", "unknown.nvme@gmail.com", age, LocalDateTime.now()
         );
 
-        when(userService.createUser(createDto)).thenReturn(response);
+        when(userServiceFacade.createUserAndPublishEvent(createDto)).thenReturn(response);
 
         mockMvc.perform(post("/api/users")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -311,14 +320,13 @@ public class UserControllerTest {
         mockMvc.perform(delete("/api/users/1"))
                 .andExpect(status().isNoContent());
 
-        verify(userService, times(1)).deleteById(1L);
-        verify(kafkaProducer, times(1)).sendUserDeleteEvent(any(UserEventDto.class));
+        verify(userServiceFacade, times(1)).deleteUserAndPublishEvent(1L);
     }
 
     @Test
     void deleteUser_NonExistingUser_Returns404() throws Exception {
         doThrow(new ResourceNotFoundException("Пользователь не найден"))
-                .when(userService).deleteById(999L);
+                .when(userServiceFacade).deleteUserAndPublishEvent(999L);
 
         mockMvc.perform(delete("/api/users/999"))
                 .andExpect(status().isNotFound())
