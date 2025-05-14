@@ -18,7 +18,7 @@ import ru.astondevs.entity.User;
 import ru.astondevs.exception.ResourceNotFoundException;
 import ru.astondevs.repository.UserRepository;
 import ru.astondevs.service.KafkaProducer;
-import ru.astondevs.service.UserServiceImpl;
+import ru.astondevs.service.impl.UserServiceImpl;
 import ru.astondevs.util.UserConverter;
 import ru.astondevs.util.UserValidator;
 

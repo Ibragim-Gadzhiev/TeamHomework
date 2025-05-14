@@ -10,6 +10,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.kafka.core.KafkaTemplate;
 import ru.astondevs.config.KafkaConfig;
 import ru.astondevs.dto.UserEventDto;
+import ru.astondevs.service.impl.KafkaProducerImpl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;

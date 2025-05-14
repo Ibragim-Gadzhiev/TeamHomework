@@ -1,4 +1,4 @@
-package ru.astondevs.service;
+package ru.astondevs.service.impl;
 
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -8,6 +8,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import ru.astondevs.exception.EmailSendingException;
+import ru.astondevs.service.EmailNotificationService;
 
 @Service
 @Slf4j

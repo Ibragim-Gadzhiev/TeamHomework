@@ -1,4 +1,4 @@
-package ru.astondevs.service;
+package ru.astondevs.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -7,6 +7,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import ru.astondevs.config.KafkaConfig;
 import ru.astondevs.dto.UserEventDto;
+import ru.astondevs.service.KafkaProducer;
 
 @Slf4j
 @Service

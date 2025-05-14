@@ -1,4 +1,4 @@
-package ru.astondevs.service;
+package ru.astondevs.service.impl;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -8,6 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import ru.astondevs.dto.UserEventDto;
+import ru.astondevs.service.EmailNotificationService;
+import ru.astondevs.service.KafkaConsumer;
 
 @Service
 @Slf4j

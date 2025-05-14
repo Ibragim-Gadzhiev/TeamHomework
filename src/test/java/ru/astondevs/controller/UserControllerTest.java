@@ -22,9 +22,9 @@ import ru.astondevs.dto.UserUpdateDto;
 import ru.astondevs.exception.DuplicateEmailException;
 import ru.astondevs.exception.ResourceNotFoundException;
 import ru.astondevs.service.KafkaProducer;
-import ru.astondevs.service.KafkaProducerImpl;
+import ru.astondevs.service.impl.KafkaProducerImpl;
 import ru.astondevs.service.UserService;
-import ru.astondevs.service.UserServiceImpl;
+import ru.astondevs.service.impl.UserServiceImpl;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
