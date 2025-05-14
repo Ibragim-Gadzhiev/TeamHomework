@@ -7,13 +7,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import ru.astondevs.dto.UserCreateDto;
-import ru.astondevs.dto.UserEventDto;
 import ru.astondevs.dto.UserResponseDto;
 import ru.astondevs.dto.UserUpdateDto;
 import ru.astondevs.entity.User;
 import ru.astondevs.exception.ResourceNotFoundException;
 import ru.astondevs.repository.UserRepository;
-import ru.astondevs.service.KafkaProducer;
 import ru.astondevs.service.UserService;
 import ru.astondevs.util.UserConverter;
 import ru.astondevs.util.UserValidator;
@@ -27,22 +25,6 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserValidator userValidator;
     private final UserConverter userConverter;
-    private final KafkaProducer kafkaProducer;
-
-    @Override
-    @Transactional
-    public UserResponseDto createUserAndPublishEvent(UserCreateDto dto) {
-        UserResponseDto createdUser = createUser(dto);
-        kafkaProducer.sendUserAddEvent(new UserEventDto("create", dto.email()));
-        return createdUser;
-    }
-
-    @Override
-    @Transactional
-    public void deleteUserAndPublishEvent(Long id) {
-        UserResponseDto deletedUser = deleteAndReturnUserById(id);
-        kafkaProducer.sendUserDeleteEvent(new UserEventDto("delete", deletedUser.email()));
-    }
 
     @Override
     @Transactional
