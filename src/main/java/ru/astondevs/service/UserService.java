@@ -63,21 +63,4 @@ public interface UserService {
      * @throws ru.astondevs.exception.ResourceNotFoundException Если пользователь не найден.
      */
     UserResponseDto deleteAndReturnUserById(Long id);
-
-    /**
-     * Создаёт нового пользователя и публикует событие о создании.
-     *
-     * @param dto Данные для создания пользователя.
-     * @return DTO созданного пользователя.
-     * @throws ru.astondevs.exception.DuplicateEmailException Если email уже занят.
-     */
-    UserResponseDto createUserAndPublishEvent(UserCreateDto dto);
-
-    /**
-     * Удаляет пользователя по ID и публикует событие об удалении.
-     *
-     * @param id Идентификатор пользователя.
-     * @throws ru.astondevs.exception.ResourceNotFoundException Если пользователь не найден.
-     */
-    void deleteUserAndPublishEvent(Long id);
 }
