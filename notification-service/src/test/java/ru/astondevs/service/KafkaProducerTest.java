@@ -38,7 +38,7 @@ class KafkaProducerTest {
         String topic = "userAdd-topic";
         UserEventDto event = new UserEventDto("create", "unknown.nvme@gmail.com");
 
-        Mockito.when(kafkaConfig.getUserAddTopic()).thenReturn(topic);
+        Mockito.when(kafkaConfig.getUserAdd()).thenReturn(topic);
 
         kafkaProducer.sendUserAddEvent(event);
 
@@ -57,7 +57,7 @@ class KafkaProducerTest {
         String topic = "userDelete-topic";
         UserEventDto event = new UserEventDto("delete", "example@gmail.com");
 
-        Mockito.when(kafkaConfig.getUserDeleteTopic()).thenReturn(topic);
+        Mockito.when(kafkaConfig.getUserDelete()).thenReturn(topic);
 
         kafkaProducer.sendUserDeleteEvent(event);
 
@@ -75,7 +75,7 @@ class KafkaProducerTest {
     void shouldThrowExceptionWhenTopicIsNull() {
         UserEventDto event = new UserEventDto("create", "unknown.nvme@gmail.com");
 
-        Mockito.when(kafkaConfig.getUserAddTopic()).thenReturn(null);
+        Mockito.when(kafkaConfig.getUserAdd()).thenReturn(null);
 
         assertThatThrownBy(() -> kafkaProducer.sendUserAddEvent(event))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -87,7 +87,7 @@ class KafkaProducerTest {
         UserEventDto event = new UserEventDto(null, null);
 
         String topic = "userAdd-topic";
-        Mockito.when(kafkaConfig.getUserAddTopic()).thenReturn(topic);
+        Mockito.when(kafkaConfig.getUserAdd()).thenReturn(topic);
 
         assertThatThrownBy(() -> kafkaProducer.sendUserAddEvent(event))
                 .isInstanceOf(IllegalArgumentException.class)

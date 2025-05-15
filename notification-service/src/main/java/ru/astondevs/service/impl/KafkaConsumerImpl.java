@@ -20,7 +20,7 @@ public class KafkaConsumerImpl implements KafkaConsumer {
     private final EmailNotificationService emailNotificationService;
 
     @Override
-    @KafkaListener(topics = "${kafka.topics.userAdd}", groupId = "${spring.kafka.consumer.group-id}")
+    @KafkaListener(topics = "${spring.kafka.topics.userAdd}", groupId = "${spring.kafka.consumer.group-id}")
     public void listenUserAddTopic(String message) {
         log.info("Received message from userAdd-topic: {}", message);
         processEvent(message, "Account Created",
@@ -28,7 +28,7 @@ public class KafkaConsumerImpl implements KafkaConsumer {
     }
 
     @Override
-    @KafkaListener(topics = "${kafka.topics.userDelete}", groupId = "${spring.kafka.consumer.group-id}")
+    @KafkaListener(topics = "${spring.kafka.topics.userDelete}", groupId = "${spring.kafka.consumer.group-id}")
     public void listenUserDeleteTopic(String message) {
         log.info("Received message from userDelete-topic: {}", message);
         processEvent(message, "Account Deleted",
