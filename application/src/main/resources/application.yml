@@ -1,6 +1,4 @@
 spring:
-  config:
-    import: classpath:email.yml
   kafka:
     bootstrap-servers: localhost:9092
     consumer:
@@ -11,6 +9,9 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    topics:
+      userAdd: userAdd-topic
+      userDelete: userDelete-topic
   datasource:
     url: jdbc:postgresql://localhost:5432/homework
     username: testuser
@@ -30,8 +31,3 @@ spring:
 logging:
   level:
     root: INFO
-
-kafka:
-  topics:
-    userAdd: userAdd-topic
-    userDelete: userDelete-topic
