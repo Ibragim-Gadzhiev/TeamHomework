@@ -1,4 +1,6 @@
 spring:
+  config:
+    import: "file:../common/src/main/resources/email.yml"
   kafka:
     bootstrap-servers: localhost:9092
     consumer:
