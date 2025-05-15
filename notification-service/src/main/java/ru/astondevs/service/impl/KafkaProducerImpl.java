@@ -23,7 +23,7 @@ public class KafkaProducerImpl implements KafkaProducer {
             throw new IllegalArgumentException("Поля UserEventDto не должны быть пустыми");
         }
 
-        String topic = kafkaConfig.getUserAddTopic();
+        String topic = kafkaConfig.getUserAdd();
         if (topic == null) {
             throw new IllegalArgumentException("Название топика Kafka не может быть пустым");
         }
@@ -38,7 +38,7 @@ public class KafkaProducerImpl implements KafkaProducer {
 
     @Override
     public void sendUserDeleteEvent(UserEventDto event) {
-        sendEvent(kafkaConfig.getUserDeleteTopic(), event);
+        sendEvent(kafkaConfig.getUserDelete(), event);
     }
 
     private void sendEvent(String topic, UserEventDto event) {
