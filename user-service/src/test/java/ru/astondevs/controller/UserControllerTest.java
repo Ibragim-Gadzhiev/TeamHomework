@@ -68,8 +68,8 @@ public class UserControllerTest {
         @Bean
         public KafkaConfig kafkaConfig() {
             KafkaConfig kafkaConfig = Mockito.mock(KafkaConfig.class);
-            when(kafkaConfig.getUserAddTopic()).thenReturn("userAdd-topic");
-            when(kafkaConfig.getUserDeleteTopic()).thenReturn("userDelete-topic");
+            when(kafkaConfig.getUserAdd()).thenReturn("userAdd-topic");
+            when(kafkaConfig.getUserDelete()).thenReturn("userDelete-topic");
             return kafkaConfig;
         }
     }
