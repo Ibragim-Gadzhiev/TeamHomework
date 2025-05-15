@@ -2,20 +2,14 @@ package ru.astondevs.config;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
 
 @Getter
 @Setter
-@Configuration
+@Component
+@ConfigurationProperties(prefix = "spring.kafka.topics")
 public class KafkaConfig {
-
-    @Value("${kafka.topics.userAdd}")
-    private String userAddTopic;
-
-    @Value("${kafka.topics.userDelete}")
-    private String userDeleteTopic;
-
-    @Value("${spring.kafka.consumer.group-id}")
-    private String consumerGroupId;
+    private String userAdd;
+    private String userDelete;
 }
