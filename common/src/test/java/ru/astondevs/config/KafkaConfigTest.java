@@ -1,17 +1,20 @@
 package ru.astondevs.config;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@SpringBootTest(classes = KafkaConfig.class)
-@EnableConfigurationProperties
+@SpringBootTest
 class KafkaConfigTest {
 
-    @Test
-    void kafkaConfig_ShouldLoadProperties() {
+    @Autowired
+    private KafkaConfig kafkaConfig;
 
+    @Test
+    void testKafkaConfigProperties() {
+        assertEquals("userAdd-topic", kafkaConfig.getUserAdd());
+        assertEquals("userDelete-topic", kafkaConfig.getUserDelete());
     }
 }
