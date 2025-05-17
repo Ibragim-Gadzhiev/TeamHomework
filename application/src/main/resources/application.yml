@@ -1,4 +1,8 @@
 spring:
+  config:
+    import:
+      - "classpath:email.yml"
+      - "classpath:kafka.yml"
   datasource:
     url: jdbc:postgresql://localhost:5432/homework
     username: testuser
@@ -18,4 +22,4 @@ spring:
 
 logging:
   level:
-    root: INFO
+    org.springframework.boot: DEBUG
