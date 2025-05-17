@@ -13,7 +13,9 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
+import ru.astondevs.TestApplication;
 import ru.astondevs.config.KafkaConfig;
 import ru.astondevs.dto.UserCreateDto;
 import ru.astondevs.dto.UserResponseDto;
@@ -43,11 +45,13 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(UserController.class)
 @Import(UserControllerTest.TestConfig.class)
+@ContextConfiguration(classes = TestApplication.class)
 public class UserControllerTest {
     static class TestConfig {
         @Bean
@@ -111,10 +115,10 @@ public class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createDto)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.name").value("Ibra"))
-                .andExpect(jsonPath("$.age").value(25))
-                .andExpect(jsonPath("$.email").value("unknown.nvme@gmail.com"));
+                .andExpect(jsonPath("$.content.id").value(1L))
+                .andExpect(jsonPath("$.content.name").value("Ibra"))
+                .andExpect(jsonPath("$.content.age").value(25))
+                .andExpect(jsonPath("$.content.email").value("unknown.nvme@gmail.com"));
 
         verify(userServiceFacade, times(1)).createUserAndPublishEvent(any(UserCreateDto.class));
     }
@@ -131,11 +135,11 @@ public class UserControllerTest {
         mockMvc.perform(post("/api/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createDto)))
-                .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.name").value("Ibra"))
-                .andExpect(jsonPath("$.email").value("gadzhiev.ibragim.for.spam@yandex.ru"))
-                .andExpect(jsonPath("$.age").value(30))
-                .andExpect(jsonPath("$.createdAt").exists());
+                .andExpect(jsonPath("$.content.id").value(1L))
+                .andExpect(jsonPath("$.content.name").value("Ibra"))
+                .andExpect(jsonPath("$.content.email").value("gadzhiev.ibragim.for.spam@yandex.ru"))
+                .andExpect(jsonPath("$.content.age").value(30))
+                .andExpect(jsonPath("$.content.createdAt").exists());
     }
 
     @ParameterizedTest
@@ -199,7 +203,7 @@ public class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createDto)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.age").value(age));
+                .andExpect(jsonPath("$.content.age").value(age));
     }
 
     @Test
@@ -208,9 +212,9 @@ public class UserControllerTest {
 
         mockMvc.perform(get("/api/users/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.email").value("unknown.nvme@gmail.com"))
-                .andExpect(jsonPath("$.age").value(25))
-                .andExpect(jsonPath("$.name").value("Ibra"));
+                .andExpect(jsonPath("$.content.email").value("unknown.nvme@gmail.com"))
+                .andExpect(jsonPath("$.content.age").value(25))
+                .andExpect(jsonPath("$.content.name").value("Ibra"));
     }
 
     @Test
@@ -224,8 +228,8 @@ public class UserControllerTest {
 
         mockMvc.perform(get("/api/users"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[1].email").value("user2@gmail.com"));
+                .andExpect(jsonPath("$._embedded.users.length()").value(2))
+                .andExpect(jsonPath("$._embedded.users[1].content.email").value("user2@gmail.com"));
     }
 
     @Test
@@ -233,8 +237,7 @@ public class UserControllerTest {
         when(userService.getAllUsers()).thenReturn(Collections.emptyList());
         mockMvc.perform(get("/api/users"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$").isEmpty());
+                .andExpect(jsonPath("$._embedded").doesNotExist());
     }
 
     @Test
@@ -260,7 +263,7 @@ public class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateDto)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Ibragim Gadzhiev"));
+                .andExpect(jsonPath("$.content.name").value("Ibragim Gadzhiev"));
     }
 
     @ParameterizedTest
@@ -311,14 +314,15 @@ public class UserControllerTest {
         mockMvc.perform(patch("/api/users/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateDto)))
-                .andExpect(jsonPath("$.name").value(testUser.name()))
-                .andExpect(jsonPath("$.email").value(testUser.email()));
+                .andExpect(jsonPath("$.content.name").value(testUser.name()))
+                .andExpect(jsonPath("$.content.email").value(testUser.email()));
     }
 
     @Test
     void deleteUser_ExistingUser_Returns204() throws Exception {
         mockMvc.perform(delete("/api/users/1"))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isNoContent())
+                .andExpect(header().exists("Link")); // Добавьте проверку заголовка
 
         verify(userServiceFacade, times(1)).deleteUserAndPublishEvent(1L);
     }
@@ -351,3 +355,4 @@ public class UserControllerTest {
         );
     }
 }
+
