@@ -6,9 +6,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@SpringBootTest
+@SpringBootTest(
+        classes = TestConfig.class,
+        properties = "spring.config.import=classpath:kafka.yml,classpath:email.yml"
+)
 class KafkaConfigTest {
-
     @Autowired
     private KafkaConfig kafkaConfig;
 
