@@ -1,8 +1,8 @@
 spring:
   config:
     import:
-      - "classpath:email.yml"
       - "classpath:kafka.yml"
+      - "classpath:email.yml"
   datasource:
     url: jdbc:postgresql://localhost:5432/homework
     username: testuser
