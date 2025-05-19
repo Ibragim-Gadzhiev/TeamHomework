@@ -9,41 +9,40 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     @ExceptionHandler(ResourceNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse handleResourceNotFound(ResourceNotFoundException ex) {
-        return new ErrorResponse(ex.getMessage(), HttpStatus.NOT_FOUND);
+        return buildError(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(DuplicateEmailException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ErrorResponse handleDuplicateEmail(DuplicateEmailException ex) {
-        return new ErrorResponse(ex.getMessage(), HttpStatus.CONFLICT);
+        return buildError(ex.getMessage(), HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleIllegalArgument(IllegalArgumentException ex) {
-        return new ErrorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST);
+        return buildError(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleAllExceptions(Exception ex) {
-        return new ErrorResponse("Internal server error", HttpStatus.INTERNAL_SERVER_ERROR);
+        return buildError("Internal server error", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Map<String, List<ValidationError>> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        List<ValidationError> errors = ex.getBindingResult().getFieldErrors().stream()
-                .map(error -> new ValidationError(
-                        error.getField(),
-                        error.getDefaultMessage()
-                ))
+        List<ValidationError> errors = ex.getBindingResult().getFieldErrors()
+                .stream()
+                .map(error -> new ValidationError(error.getField(), error.getDefaultMessage()))
                 .toList();
 
         return Map.of("errors", errors);
@@ -52,14 +51,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(KafkaException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleKafkaException(Exception ex) {
-        return new ErrorResponse("Kafka error: " + ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        return buildError("Kafka error: " + ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(MessagingException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleMessagingException(Exception ex) {
-        return new ErrorResponse("Email error: " + ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        return buildError("Email error: " + ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    public record ValidationError(String field, String message) {}
+    private ErrorResponse buildError(String message, HttpStatus status) {
+        return new ErrorResponse(message, status.getReasonPhrase().toLowerCase());
+    }
 }
