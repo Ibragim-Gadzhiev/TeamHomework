@@ -19,20 +19,16 @@ class GlobalExceptionHandlerValidationTest {
 
     @Test
     void handleValidationExceptions_ShouldReturnValidationErrors() {
-        // Мок BindingResult
         BindingResult bindingResult = mock(BindingResult.class);
         when(bindingResult.getFieldErrors()).thenReturn(List.of(
                 new FieldError("objectName", "name", "Name is required"),
                 new FieldError("objectName", "email", "Email is invalid")
         ));
 
-        // Создаем MethodArgumentNotValidException
         MethodArgumentNotValidException exception = new MethodArgumentNotValidException(null, bindingResult);
 
-        // Вызываем обработчик
-        Map<String, List<GlobalExceptionHandler.ValidationError>> response = exceptionHandler.handleValidationExceptions(exception);
+        Map<String, List<ValidationError>> response = exceptionHandler.handleValidationExceptions(exception);
 
-        // Проверяем результат
         assertThat(response).containsKey("errors");
         assertThat(response.get("errors")).hasSize(2);
         assertThat(response.get("errors")).extracting("field").containsExactly("name", "email");

@@ -1,7 +1,6 @@
 package ru.astondevs.exception;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpStatus;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -16,7 +15,7 @@ class GlobalExceptionHandlerTest {
         ErrorResponse response = exceptionHandler.handleResourceNotFound(exception);
 
         assertThat(response.message()).isEqualTo("Пользователь не найден");
-        assertThat(response.httpStatus()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(response.httpStatus()).isEqualTo("not found");
     }
 
     @Test
@@ -26,7 +25,7 @@ class GlobalExceptionHandlerTest {
         ErrorResponse response = exceptionHandler.handleDuplicateEmail(exception);
 
         assertThat(response.message()).isEqualTo("Email уже существует");
-        assertThat(response.httpStatus()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(response.httpStatus()).isEqualTo("conflict");
     }
 
     @Test
@@ -36,7 +35,7 @@ class GlobalExceptionHandlerTest {
         ErrorResponse response = exceptionHandler.handleIllegalArgument(exception);
 
         assertThat(response.message()).isEqualTo("Invalid argument");
-        assertThat(response.httpStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.httpStatus()).isEqualTo("bad request");
     }
 
     @Test
@@ -46,7 +45,7 @@ class GlobalExceptionHandlerTest {
         ErrorResponse response = exceptionHandler.handleAllExceptions(exception);
 
         assertThat(response.message()).isEqualTo("Internal server error");
-        assertThat(response.httpStatus()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+        assertThat(response.httpStatus()).isEqualTo("internal server error");
     }
 
     @Test
@@ -56,7 +55,7 @@ class GlobalExceptionHandlerTest {
         ErrorResponse response = exceptionHandler.handleKafkaException(exception);
 
         assertThat(response.message()).isEqualTo("Kafka error: Kafka failure");
-        assertThat(response.httpStatus()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+        assertThat(response.httpStatus()).isEqualTo("internal server error");
     }
 
     @Test
@@ -66,6 +65,6 @@ class GlobalExceptionHandlerTest {
         ErrorResponse response = exceptionHandler.handleMessagingException(exception);
 
         assertThat(response.message()).isEqualTo("Email error: Email service failed");
-        assertThat(response.httpStatus()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+        assertThat(response.httpStatus()).isEqualTo("internal server error");
     }
 }
