@@ -1,4 +1,34 @@
-spring:
+  spring:
+  spring:
+    application:
+      name: api-gateway
+    cloud:
+      gateway:
+        discovery:
+          locator:
+            enabled: true   # Автоматически обнаруживает сервисы из Eureka
+        routes:
+          - id: user-service
+            uri: lb://user-service
+            predicates:
+              - Path=/api/users/**
+            filters:
+              - StripPrefix=1
+
+          - id: order-service
+            uri: lb://order-service
+            predicates:
+              - Path=/api/orders/**
+            filters:
+              - StripPrefix=1
+  eureka:
+    instance:
+      hostname: localhost
+    client:
+      register-with-eureka: false
+      fetch-registry: false
+      service-url:
+        defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
   config:
     import: classpath:email.yml
   kafka:
