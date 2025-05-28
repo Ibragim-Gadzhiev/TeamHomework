@@ -15,6 +15,7 @@
         <module>application</module>
         <module>user-service</module>
         <module>notification-service</module>
+        <module>discovery-service</module>
     </modules>
 
     <!-- родительская (parent) конфигурация -->
@@ -37,9 +38,22 @@
         <h2.version>2.3.232</h2.version>
         <dotenv.version>3.2.0</dotenv.version>
         <kafka.version>3.8.1</kafka.version>
+        <spring.cloud.version>2024.0.0</spring.cloud.version>
         <maven.surefire.plugin.version>3.2.3</maven.surefire.plugin.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>2021.0.9</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <!-- хибернейт -->
