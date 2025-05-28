@@ -1,8 +1,10 @@
 package ru.astondevs.service.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import ru.astondevs.config.KafkaConfig;
@@ -17,22 +19,22 @@ public class KafkaProducerImpl implements KafkaProducer {
     private final ObjectMapper objectMapper;
     private final KafkaConfig kafkaConfig;
 
+    @Value("${spring.kafka.topics.userAdd}")
+    private String userAddTopic;
+
+    @Value("${spring.kafka.topics.userDelete}")
+    private String userDeleteTopic;
+
     @Override
     public void sendUserAddEvent(UserEventDto event) {
-        if (event == null || event.operation() == null || event.email() == null) {
-            throw new IllegalArgumentException("Поля UserEventDto не должны быть пустыми");
-        }
+        kafkaTemplate.send(userAddTopic, convertToJson(event));
+    }
 
-        String topic = kafkaConfig.getUserAdd();
-        if (topic == null) {
-            throw new IllegalArgumentException("Название топика Kafka не может быть пустым");
-        }
-
+    private String convertToJson(UserEventDto event) {
         try {
-            String message = objectMapper.writeValueAsString(event);
-            kafkaTemplate.send(topic, message);
-        } catch (Exception e) {
-            throw new RuntimeException("Не удалось сериализовать событие", e);
+            return objectMapper.writeValueAsString(event);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to serialize event", e);
         }
     }
 
@@ -51,4 +53,5 @@ public class KafkaProducerImpl implements KafkaProducer {
             throw new RuntimeException("Не удалось отправить сообщение в Kafka", e);
         }
     }
+
 }

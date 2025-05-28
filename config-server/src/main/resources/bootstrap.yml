@@ -1,7 +1,7 @@
 spring:
   application:
-    name: notification-service
+    name: config-server
   cloud:
     config:
       enabled: true
-      uri: http://localhost:8888
+      uri: http://config-server:8888

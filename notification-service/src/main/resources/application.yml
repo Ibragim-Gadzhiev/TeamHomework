@@ -1,0 +1,7 @@
+spring:
+  kafka:
+    topics:
+      userAdd: userAdd-topic
+      userDelete: userDelete-topic
+    consumer:
+      group-id: notification-group

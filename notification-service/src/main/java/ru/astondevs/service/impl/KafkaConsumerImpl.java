@@ -20,7 +20,7 @@ public class KafkaConsumerImpl implements KafkaConsumer {
     private final EmailNotificationService emailNotificationService;
 
     @Override
-    @KafkaListener(topics = "${spring.kafka.topics.userAdd}", groupId = "${spring.kafka.consumer.group-id}")
+    @KafkaListener(topics = "${spring.kafka.topics.userAdd}")
     public void listenUserAddTopic(String message) {
         log.info("Received message from userAdd-topic: {}", message);
         processEvent(message, "Account Created",
