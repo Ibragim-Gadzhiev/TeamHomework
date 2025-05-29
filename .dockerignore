@@ -1,7 +1,9 @@
-target
-.git
-.idea
-*.iml
-*.log
-*.md
-docker-compose.override.yml
+**/target/
+**/.idea/
+**/*.iml
+.git/
+**/logs/
+**/node_modules/
+**/.gitignore
+**/Dockerfile
+docker-compose.yml

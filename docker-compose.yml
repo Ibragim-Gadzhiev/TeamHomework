@@ -87,8 +87,6 @@ services:
     networks:
       - homework-network
 
-  homework-network:
-    driver
   postgres:
     image: postgres:15-alpine
     environment:
