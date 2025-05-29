@@ -15,3 +15,11 @@ spring:
           uri: lb://notification-service
           predicates:
             - Path=/api/email/**
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always

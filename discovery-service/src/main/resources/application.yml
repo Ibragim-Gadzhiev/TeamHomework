@@ -9,3 +9,7 @@ eureka:
     fetch-registry: false
     service-url:
       defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
+
+spring:
+  config:
+    import: optional:configserver:http://config-server:8888

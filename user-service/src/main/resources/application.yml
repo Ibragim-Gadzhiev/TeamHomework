@@ -3,6 +3,14 @@ spring:
     topics:
       userAdd: userAdd-topic
       userDelete: userDelete-topic
+  datasource:
+    url: jdbc:postgresql://postgres:5432/homework
+    username: testuser
+    password: 123
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
 
 resilience4j:
   circuitbreaker:
@@ -15,3 +23,9 @@ resilience4j:
         sliding-window-size: 10
         wait-duration-in-open-state: 5000
         permitted-number-of-calls-in-half-open-state: 3
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://discovery-service:8761/eureka

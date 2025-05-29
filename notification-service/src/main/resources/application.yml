@@ -5,3 +5,10 @@ spring:
       userDelete: userDelete-topic
     consumer:
       group-id: notification-group
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://discovery-service:8761/eureka
+

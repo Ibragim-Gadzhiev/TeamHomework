@@ -1,6 +1,7 @@
 package ru.astondevs.controller;
 
 import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.CollectionModel;
@@ -120,22 +121,16 @@ public class UserController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Operation(
-            summary = "Удалить пользователя",
-            description = "Удаляет пользователя по ID и публикует событие",
-            responses = {
-                    @ApiResponse(responseCode = "204", description = "Пользователь успешно удален",
-                            content = @Content(schema = @Schema(implementation = UserResponseWrapper.class))),
-                    @ApiResponse(responseCode = "404", description = "Пользователь не найден")
-            }
-    )
+    @Operation(summary = "Удалить пользователя")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Пользователь успешно удален"),
+            @ApiResponse(responseCode = "404", description = "Пользователь не найден")
+    })
     public ResponseEntity<Void> deleteUser(
             @Parameter(description = "ID пользователя", example = "1", required = true)
-            @PathVariable Long id) {
+            @PathVariable Long id
+    ) {
         userServiceFacade.deleteUserAndPublishEvent(id);
-        Link usersLink = Link.of("/api/users").withRel("users");
-        return ResponseEntity.noContent()
-                .header("Link", usersLink.toString())
-                .build();
+        return ResponseEntity.noContent().build();
     }
 }

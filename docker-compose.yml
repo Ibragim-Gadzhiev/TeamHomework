@@ -1,71 +1,96 @@
+version: "3.8"
+
 services:
-  # Service Discovery
   discovery-service:
-    build: ./discovery-service
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.discovery-service
     ports:
       - "8761:8761"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_CLOUD_CONFIG_ENABLED=false
     networks:
       - homework-network
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8761" ]
+      test: ["CMD-SHELL", "curl -f http://localhost:8761/actuator/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
 
-  # Config Server
   config-server:
-    build: ./config-server
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.config-server
     ports:
       - "8888:8888"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
     networks:
       - homework-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8888/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
     depends_on:
       discovery-service:
         condition: service_healthy
 
-  # API Gateway
   api-gateway:
-    build: ./api-gateway
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api-gateway
     ports:
       - "8080:8080"
     environment:
-      SPRING_PROFILES_ACTIVE: docker
+      - SPRING_PROFILES_ACTIVE=docker
     depends_on:
-      - config-server
-      - discovery-service
+      config-server:
+        condition: service_healthy
+      discovery-service:
+        condition: service_healthy
     networks:
       - homework-network
 
-  # User Service
   user-service:
-    build: ./user-service
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.user-service
     environment:
-      SPRING_PROFILES_ACTIVE: docker
+      - SPRING_PROFILES_ACTIVE=docker
     depends_on:
-      - config-server
-      - discovery-service
-      - postgres
-      - kafka
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      discovery-service:
+        condition: service_healthy
     networks:
       - homework-network
 
-  # Notification Service
   notification-service:
-    build: ./notification-service
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.notification-service
     environment:
-      SPRING_PROFILES_ACTIVE: docker
+      - SPRING_PROFILES_ACTIVE=docker
     depends_on:
-      - config-server
-      - discovery-service
-      - kafka
+      kafka:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      discovery-service:
+        condition: service_healthy
     networks:
       - homework-network
 
-  # PostgreSQL
+  homework-network:
+    driver
   postgres:
-    image: postgres:latest
+    image: postgres:15-alpine
     environment:
       POSTGRES_USER: testuser
       POSTGRES_PASSWORD: 123
@@ -76,13 +101,12 @@ services:
       - homework-network
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U testuser" ]
-      interval: 5s
+      interval: 10s
       timeout: 5s
       retries: 10
 
-  # Kafka и Zookeeper
   zookeeper:
-    image: confluentinc/cp-zookeeper:latest
+    image: confluentinc/cp-zookeeper:7.4.0
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
     networks:
@@ -94,21 +118,27 @@ services:
       retries: 10
 
   kafka:
-    image: confluentinc/cp-kafka:latest
+    image: confluentinc/cp-kafka:7.4.0
     depends_on:
-      - zookeeper
+      zookeeper:
+        condition: service_healthy
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_CREATE_TOPICS: "userAdd-topic:1:1,userDelete-topic:1:1"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'false'
     ports:
       - "9092:9092"
     networks:
       - homework-network
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server kafka:9092 --list"]
+      interval: 20s
+      timeout: 10s
+      retries: 10
 
 volumes:
   postgres-data:

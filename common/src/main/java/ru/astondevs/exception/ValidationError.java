@@ -1,4 +1,4 @@
 package ru.astondevs.exception;
 
-public record ValidationError(String field, String message) {
+public record ValidationError(String field, String errors) {
 }
